@@ -1,0 +1,3 @@
+rootProject.name = 'android-opencv-gradle-plugin'
+
+include 'plugin'

@@ -1,0 +1,17 @@
+plugins {
+    id 'groovy'
+    id 'java'
+}
+
+group 'com.ahasbini.tools'
+version '0.0.1-dev'
+
+sourceCompatibility = 1.8
+
+dependencies {
+    implementation gradleApi()
+    implementation localGroovy()
+
+    testImplementation gradleTestKit()
+    testImplementation 'junit:junit:4.12'
+}
