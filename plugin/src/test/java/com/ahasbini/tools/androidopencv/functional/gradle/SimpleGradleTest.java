@@ -16,25 +16,19 @@ import java.io.IOException;
  */
 public class SimpleGradleTest extends BaseFunctionalTest {
 
-    private File settingsFile;
-    private File buildFile;
-
     @Before
     public void setup() throws IOException {
-        settingsFile = getTestProjectDir().newFile("settings.gradle");
-        buildFile = getTestProjectDir().newFile("build.gradle");
+        File settingsFile = getTestProjectDir().newFile("settings.gradle");
+        writeFileFromClasspath("/SimpleGradleTest_testHelloWorldTask_settings.gradle",
+                settingsFile);
+
+        File buildFile = getTestProjectDir().newFile("build.gradle");
+        writeFileFromClasspath("/SimpleGradleTest_testHelloWorldTask_build.gradle",
+                buildFile);
     }
 
     @Test
-    public void testHelloWorldTask() throws IOException {
-        writeFile(settingsFile, "rootProject.name = 'hello-world'");
-        String buildFileContent = "task helloWorld {" +
-                "    doLast {" +
-                "        println 'Hello world!'" +
-                "    }" +
-                "}";
-        writeFile(buildFile, buildFileContent);
-
+    public void testHelloWorldTask() {
         BuildResult result = getGradleRunnerBuilder()
                 .withProjectDir(testProjectDir.getRoot())
                 .withArguments("helloWorld")

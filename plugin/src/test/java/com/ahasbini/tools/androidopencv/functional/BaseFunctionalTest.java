@@ -10,6 +10,9 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 
 /**
  * Created by ahasbini on 05-Oct-19.
@@ -30,15 +33,14 @@ public class BaseFunctionalTest extends BaseTest {
     }
 
     protected void writeFile(File destination, String content) throws IOException {
-        BufferedWriter output = null;
-        try {
-            output = new BufferedWriter(new FileWriter(destination));
+        try (BufferedWriter output = new BufferedWriter(new FileWriter(destination))) {
             output.write(content);
-        } finally {
-            if (output != null) {
-                output.close();
-            }
         }
+    }
+
+    protected void writeFileFromClasspath(String classpath, File file) throws IOException {
+        InputStream resourceAsStream = getClass().getResourceAsStream(classpath);
+        Files.copy(resourceAsStream, file.toPath(), StandardCopyOption.REPLACE_EXISTING);
     }
 
 }
