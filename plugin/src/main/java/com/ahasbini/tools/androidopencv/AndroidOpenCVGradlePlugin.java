@@ -43,7 +43,7 @@ public class AndroidOpenCVGradlePlugin implements Plugin<Project> {
                 plugins.hasPlugin("com.android.feature")) {
             logger.info("Found android gradle plugin");
         } else {
-            throw new RuntimeException(resource.getString("missing_android_plugin"));
+            throw new PluginException(resource.getString("missing_android_plugin"));
         }
     }
 }
