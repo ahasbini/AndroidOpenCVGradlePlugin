@@ -1,6 +1,7 @@
 plugins {
     id 'groovy'
     id 'java'
+    id 'java-gradle-plugin'
 }
 
 group 'com.ahasbini.tools'

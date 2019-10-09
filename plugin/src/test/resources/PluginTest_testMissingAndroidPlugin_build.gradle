@@ -1,0 +1,9 @@
+plugins {
+    id 'com.ahasbini.android-opencv-gradle-plugin'
+}
+
+task helloWorld {
+    doLast {
+        println 'Hello world!'
+    }
+}

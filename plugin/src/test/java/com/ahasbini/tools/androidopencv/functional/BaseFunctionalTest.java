@@ -43,4 +43,11 @@ public class BaseFunctionalTest extends BaseTest {
         Files.copy(resourceAsStream, file.toPath(), StandardCopyOption.REPLACE_EXISTING);
     }
 
+    protected String buildOutputRegex(String output) {
+        return "(?s).*" + output.replace("?", "\\?")
+                .replace(".", "\\.")
+                .replace("*", "\\*")
+                .replace("\n", "\n.*") + ".*";
+    }
+
 }
