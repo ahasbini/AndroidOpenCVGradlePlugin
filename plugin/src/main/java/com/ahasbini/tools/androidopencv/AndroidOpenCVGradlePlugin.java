@@ -6,16 +6,18 @@ import org.gradle.api.plugins.PluginContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ResourceBundle;
+
 /**
  * Created by ahasbini on 12-Sep-19.
  */
 public class AndroidOpenCVGradlePlugin implements Plugin<Project> {
 
     private final Logger logger = LoggerFactory.getLogger(AndroidOpenCVGradlePlugin.class);
+    private final ResourceBundle resource = ResourceBundle.getBundle("messages");
 
     @Override
     public void apply(Project project) {
-        // TODO: 06-Oct-19 ahasbini: implement check for android gradle plugin (application or library)
         // TODO: 06-Oct-19 ahasbini: extract required version of opencv
         // TODO: 06-Oct-19 ahasbini: download opencv
         // TODO: 06-Oct-19 ahasbini: add opencv to correct source sets of android project
@@ -41,9 +43,7 @@ public class AndroidOpenCVGradlePlugin implements Plugin<Project> {
                 plugins.hasPlugin("com.android.feature")) {
             logger.info("Found android gradle plugin");
         } else {
-            throw new RuntimeException("No android gradle plugins found, maybe missing\n" +
-                    "   apply plugin: 'com.android.application'\n" +
-                    "in 'build.gradle' file?");
+            throw new RuntimeException(resource.getString("missing_android_plugin"));
         }
     }
 }
