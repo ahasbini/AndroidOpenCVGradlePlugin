@@ -1,7 +1,6 @@
 plugins {
     id 'groovy'
     id 'java'
-    id 'java-gradle-plugin'
 }
 
 group 'com.ahasbini.tools'
@@ -9,10 +8,42 @@ version '0.0.1-dev'
 
 sourceCompatibility = 1.8
 
+task createClasspathManifest {
+    def outputDir = file("$buildDir/$name")
+
+    //noinspection GroovyAssignabilityCheck
+    inputs.files sourceSets.main.runtimeClasspath.filter { File f ->
+            !f.name.endsWith(".jar")
+    }
+    outputs.dir outputDir
+
+    doLast {
+        outputDir.mkdirs()
+        file("$outputDir/plugin-classpath.txt").text = sourceSets.main.runtimeClasspath.filter { File f ->
+            !f.name.endsWith(".jar")
+        }.join("\n")
+    }
+}
+
+sourceSets {
+    //noinspection GroovyAssignabilityCheck
+    main {
+        java {
+            srcDirs = [] // don't compile Java code twice
+        }
+        groovy {
+            srcDirs = [ 'src/main/groovy', 'src/main/java' ]
+        }
+    }
+}
+
 dependencies {
     implementation gradleApi()
     implementation localGroovy()
 
     testImplementation gradleTestKit()
     testImplementation 'junit:junit:4.12'
+
+    //noinspection GroovyAssignabilityCheck
+    testRuntimeOnly files(createClasspathManifest)
 }

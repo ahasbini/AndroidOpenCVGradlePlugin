@@ -1,0 +1,4 @@
+//noinspection GrPackage
+plugins {
+    id 'com.ahasbini.android-opencv-gradle-plugin'
+}

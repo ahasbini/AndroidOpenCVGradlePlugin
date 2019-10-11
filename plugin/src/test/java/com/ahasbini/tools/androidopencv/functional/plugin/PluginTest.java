@@ -8,6 +8,7 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.ResourceBundle;
 
 /**
@@ -19,31 +20,79 @@ public class PluginTest extends BaseFunctionalTest {
     // TODO: 06-Oct-19 ahasbini: Implement test for applying plugin with android gradle plugin and lib
     // TODO: 06-Oct-19 ahasbini: Implement test for applying plugin with android gradle plugin and app and cpp code
     // TODO: 06-Oct-19 ahasbini: Implement test for applying plugin with android gradle plugin and lib and cpp code
-    // TODO: 09-Oct-19 ahasbini: Implement test for applying plugin with android gradle plugin but without opencv version
 
-    private final ResourceBundle resource = ResourceBundle.getBundle("messages");
+    private final ResourceBundle messages = ResourceBundle.getBundle("messages");
 
     @Test
-    public void testMissingAndroidPlugin() throws IOException {
+    public void testMissingAndroidPluginWithPluginsDsl() throws IOException, URISyntaxException {
 
         // SETUP
-        File settingsFile = getTestProjectDir().newFile("settings.gradle");
-        writeFileFromClasspath("/PluginTest_testMissingAndroidPlugin_settings.gradle",
-                settingsFile);
-
-        File buildFile = getTestProjectDir().newFile("build.gradle");
-        writeFileFromClasspath("/PluginTest_testMissingAndroidPlugin_build.gradle",
-                buildFile);
+        writeFolderContentsFromClasspath("/PluginTest_testMissingAndroidPluginWithPluginsDsl",
+                getTestProjectDir().getRoot());
 
         // TEST
         BuildResult result = getGradleRunnerBuilder()
                 .withProjectDir(testProjectDir.getRoot())
-                .withArguments("helloWorld")
-                .withPluginClasspath()
+                .withPluginClasspath(getPluginClassPath())
                 .buildAndFail();
 
         Assert.assertTrue(result.getOutput().matches(buildOutputRegex(
-                resource.getString("missing_android_plugin"))));
-        Assert.assertNull(result.task(":helloWorld"));
+                messages.getString("missing_android_gradle_plugin"))));
+    }
+
+    @Test
+    public void testMissingAndroidPluginWithApplyPlugin() throws IOException, URISyntaxException {
+
+        // SETUP
+        writeFolderContentsFromClasspath("/PluginTest_testMissingAndroidPluginWithApplyPlugin",
+                getTestProjectDir().getRoot());
+        injectBuildScriptClassPath(new File(getTestProjectDir().getRoot(), "build.gradle"),
+                getPluginClassPath());
+
+        // TEST
+        BuildResult result = getGradleRunnerBuilder()
+                .withProjectDir(testProjectDir.getRoot())
+                .buildAndFail();
+
+        Assert.assertTrue(result.getOutput().matches(buildOutputRegex(
+                messages.getString("missing_android_gradle_plugin"))));
+    }
+
+    @Test
+    public void testMissingAndroidOpenCVVersion() throws IOException, URISyntaxException {
+
+        // SETUP
+        writeFolderContentsFromClasspath("/PluginTest_testMissingAndroidOpenCVVersion",
+                getTestProjectDir().getRoot());
+        injectBuildScriptClassPath(new File(getTestProjectDir().getRoot(), "build.gradle"),
+                getPluginClassPath());
+
+        BuildResult result = getGradleRunnerBuilder()
+                .withProjectDir(testProjectDir.getRoot())
+                .withArguments(":installAndroidOpenCV")
+                .withGradleVersion("4.1")
+                .buildAndFail();
+
+        Assert.assertTrue(result.getOutput().matches(buildOutputRegex(
+                messages.getString("missing_opencv_version"))));
+    }
+
+    @Test
+    public void testEmptyAndroidOpenCVVersion() throws IOException, URISyntaxException {
+
+        // SETUP
+        writeFolderContentsFromClasspath("/PluginTest_testEmptyAndroidOpenCVVersion",
+                getTestProjectDir().getRoot());
+        injectBuildScriptClassPath(new File(getTestProjectDir().getRoot(), "build.gradle"),
+                getPluginClassPath());
+
+        BuildResult result = getGradleRunnerBuilder()
+                .withProjectDir(testProjectDir.getRoot())
+                .withArguments(":installAndroidOpenCV")
+                .withGradleVersion("4.1")
+                .buildAndFail();
+
+        Assert.assertTrue(result.getOutput().matches(buildOutputRegex(
+                messages.getString("missing_opencv_version"))));
     }
 }

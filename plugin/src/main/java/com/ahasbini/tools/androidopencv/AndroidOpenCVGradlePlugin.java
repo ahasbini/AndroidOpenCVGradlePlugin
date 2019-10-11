@@ -2,7 +2,8 @@ package com.ahasbini.tools.androidopencv;
 
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.api.plugins.PluginContainer;
+import org.gradle.api.Task;
+import org.gradle.api.plugins.PluginManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,7 +15,7 @@ import java.util.ResourceBundle;
 public class AndroidOpenCVGradlePlugin implements Plugin<Project> {
 
     private final Logger logger = LoggerFactory.getLogger(AndroidOpenCVGradlePlugin.class);
-    private final ResourceBundle resource = ResourceBundle.getBundle("messages");
+    private final ResourceBundle messages = ResourceBundle.getBundle("messages");
 
     @Override
     public void apply(Project project) {
@@ -36,14 +37,40 @@ public class AndroidOpenCVGradlePlugin implements Plugin<Project> {
 //
 //        }
 
-        PluginContainer plugins = project.getPlugins();
-        if (plugins.hasPlugin("com.android.application") ||
-                plugins.hasPlugin("com.android.library") ||
-                plugins.hasPlugin("com.android.test") ||
-                plugins.hasPlugin("com.android.feature")) {
-            logger.info("Found android gradle plugin");
-        } else {
-            throw new PluginException(resource.getString("missing_android_plugin"));
+        PluginManager plugins = project.getPluginManager();
+        if (!plugins.hasPlugin("com.android.application") &&
+                !plugins.hasPlugin("com.android.library") &&
+                !plugins.hasPlugin("com.android.test") &&
+                !plugins.hasPlugin("com.android.feature")) {
+            throw new PluginException(messages.getString("missing_android_gradle_plugin"));
         }
+
+        logger.debug("Found android gradle plugin");
+        project.getExtensions().create("androidOpenCV", AndroidOpenCVExtension.class);
+
+        InstallAndroidOpenCVTask installAndroidOpenCVTask =
+                project.getTasks().create(InstallAndroidOpenCVTask.NAME, InstallAndroidOpenCVTask.class);
+        Task preBuild = project.getTasks().findByPath("preBuild");
+        if (preBuild != null && preBuild.getEnabled()) {
+            preBuild.dependsOn(installAndroidOpenCVTask);
+        } else {
+            // TODO: 11-Oct-19 ahasbini: test this
+            logger.warn("Failed to properly configure android opencv for current build.\n");
+        }
+
+//        project.getTasks().add()
+
+//        Object androidOpenCV = project.getExtensions().findByName("androidOpenCV");
+//        if (androidOpenCV == null) {
+//            throw new PluginException(messages.getString("missing_opencv_version"));
+//        }
+//
+//        AndroidOpenCVExtension androidOpenCVExtension = ((AndroidOpenCVExtension) androidOpenCV);
+//        logger.debug("android extension: " + androidOpenCVExtension);
+//        logger.debug("android.openCVVersion extension: " + androidOpenCVExtension.getVersion());
+//        if (androidOpenCVExtension.getVersion() == null ||
+//                androidOpenCVExtension.getVersion().equals("")) {
+//            throw new PluginException(messages.getString("missing_opencv_version"));
+//        }
     }
 }
