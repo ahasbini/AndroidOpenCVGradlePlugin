@@ -1,11 +1,8 @@
 package com.ahasbini.tools.androidopencv
 
+import com.ahasbini.tools.androidopencv.logging.Logger
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-
-
 /**
  * Created by ahasbini on 11-Oct-19.
  */
@@ -13,8 +10,8 @@ class InstallAndroidOpenCVTask extends DefaultTask {
 
     public final static String NAME = "installAndroidOpenCV"
 
-    private final Logger logger = LoggerFactory.getLogger(InstallAndroidOpenCVTask)
-    private final ResourceBundle messages = ResourceBundle.getBundle("messages");
+    private final Logger logger = Logger.getLogger(InstallAndroidOpenCVTask)
+    private final ResourceBundle messages = ResourceBundle.getBundle("messages")
 
     @Override
     String getName() {
@@ -28,6 +25,7 @@ class InstallAndroidOpenCVTask extends DefaultTask {
 
     @TaskAction
     performInstall() {
+        // Extract the needed extensions
         def androidExtension = getProject().getExtensions().findByName("android")
         def androidOpenCVExtension = (AndroidOpenCVExtension) getProject().getExtensions()
                 .findByName("androidOpenCV")
@@ -38,9 +36,9 @@ class InstallAndroidOpenCVTask extends DefaultTask {
             throw new PluginException(messages.getString("missing_opencv_version"))
         }
 
-
         logger.info("android: " + androidExtension)
         //noinspection GroovyAssignabilityCheck
         logger.info("android.compileSdkVersion: " + androidExtension.compileSdkVersion)
+
     }
 }

@@ -34,6 +34,7 @@ public class PluginTest extends BaseFunctionalTest {
         BuildResult result = getGradleRunnerBuilder()
                 .withProjectDir(testProjectDir.getRoot())
                 .withPluginClasspath(getPluginClassPath())
+                .withArguments("-PENABLE_ANDROID_OPENCV_LOGS")
                 .buildAndFail();
 
         Assert.assertTrue(result.getOutput().matches(buildOutputRegex(
@@ -52,6 +53,7 @@ public class PluginTest extends BaseFunctionalTest {
         // TEST
         BuildResult result = getGradleRunnerBuilder()
                 .withProjectDir(testProjectDir.getRoot())
+                .withArguments("-PENABLE_ANDROID_OPENCV_LOGS")
                 .buildAndFail();
 
         Assert.assertTrue(result.getOutput().matches(buildOutputRegex(
@@ -69,7 +71,7 @@ public class PluginTest extends BaseFunctionalTest {
 
         BuildResult result = getGradleRunnerBuilder()
                 .withProjectDir(testProjectDir.getRoot())
-                .withArguments(":installAndroidOpenCV")
+                .withArguments("-PENABLE_ANDROID_OPENCV_LOGS", ":installAndroidOpenCV")
                 .withGradleVersion("4.1")
                 .buildAndFail();
 
@@ -88,7 +90,7 @@ public class PluginTest extends BaseFunctionalTest {
 
         BuildResult result = getGradleRunnerBuilder()
                 .withProjectDir(testProjectDir.getRoot())
-                .withArguments(":installAndroidOpenCV")
+                .withArguments("-PENABLE_ANDROID_OPENCV_LOGS", ":installAndroidOpenCV")
                 .withGradleVersion("4.1")
                 .buildAndFail();
 

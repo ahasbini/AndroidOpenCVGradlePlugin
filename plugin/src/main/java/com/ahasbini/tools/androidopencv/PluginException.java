@@ -3,7 +3,6 @@ package com.ahasbini.tools.androidopencv;
 /**
  * Created by ahasbini on 09-Oct-19.
  */
-@SuppressWarnings("WeakerAccess")
 public class PluginException extends RuntimeException {
 
     public PluginException() {
