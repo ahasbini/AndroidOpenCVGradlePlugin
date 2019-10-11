@@ -2,9 +2,10 @@ package com.ahasbini.tools.androidopencv;
 
 import com.ahasbini.tools.androidopencv.logging.Logger;
 
+import org.gradle.api.Action;
+import org.gradle.api.NonNullApi;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.api.Task;
 import org.gradle.api.plugins.PluginManager;
 
 import java.util.ResourceBundle;
@@ -12,6 +13,7 @@ import java.util.ResourceBundle;
 /**
  * Created by ahasbini on 12-Sep-19.
  */
+@NonNullApi
 public class AndroidOpenCVGradlePlugin implements Plugin<Project> {
 
     private final Logger logger = Logger.getLogger(AndroidOpenCVGradlePlugin.class);
@@ -19,7 +21,6 @@ public class AndroidOpenCVGradlePlugin implements Plugin<Project> {
 
     @Override
     public void apply(Project project) {
-        // TODO: 06-Oct-19 ahasbini: extract required version of opencv
         // TODO: 06-Oct-19 ahasbini: download opencv
         // TODO: 06-Oct-19 ahasbini: add opencv to correct source sets of android project
         // TODO: 06-Oct-19 ahasbini: version format: major.minor.subminor.subsubminor
@@ -44,20 +45,29 @@ public class AndroidOpenCVGradlePlugin implements Plugin<Project> {
 
         logger.debug("Found android gradle plugin");
 
-        // Add the extension to the project
+        // Add the extension to the project and wait for afterEvaluate is called when configuration
+        // phase is finished
         project.getExtensions().create("androidOpenCV", AndroidOpenCVExtension.class);
+        project.afterEvaluate(new AfterEvaluateAction());
+    }
 
-        // Add the task to be later executed by Gradle but placed before Android Gradle Plugin tasks
-        // are executed
-        InstallAndroidOpenCVTask installAndroidOpenCVTask =
-                project.getTasks().create(InstallAndroidOpenCVTask.NAME, InstallAndroidOpenCVTask.class);
-        Task preBuild = project.getTasks().findByPath("preBuild");
-        if (preBuild != null && preBuild.getEnabled()) {
-            preBuild.dependsOn(installAndroidOpenCVTask);
-        } else {
-            // If unable to place tasks before Android Gradle Plugin tasks, give the user a notice
-            // TODO: 11-Oct-19 ahasbini: test this
-            logger.quiet("Failed to properly configure android opencv for current build.\n");
+    private class AfterEvaluateAction implements Action<Project> {
+
+        @Override
+        public void execute(Project project) {
+            logger.info("afterEvaluate called");
+            AndroidOpenCVExtension androidOpenCVExtension =
+                    project.getExtensions().findByType(AndroidOpenCVExtension.class);
+
+            logger.info("androidOpenCVExtension: " + androidOpenCVExtension);
+
+            if (androidOpenCVExtension == null || androidOpenCVExtension.getVersion() == null
+                    || androidOpenCVExtension.getVersion().equals("")) {
+                throw new PluginException(messages.getString("missing_opencv_version"));
+            }
+
+            logger.info("Required OpenCV version: " + androidOpenCVExtension.getVersion());
         }
     }
+
 }
