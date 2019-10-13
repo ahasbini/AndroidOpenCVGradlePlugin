@@ -6,6 +6,7 @@ import org.gradle.api.Project
  * Created by ahasbini on 12-Oct-19.
  */
 class AndroidBuildScriptModifier {
+    // TODO: 14-Oct-19 ahasbini: implement testing for this
 
     private final Logger logger = Logger.getLogger(AndroidBuildScriptModifier)
 
@@ -20,6 +21,7 @@ class AndroidBuildScriptModifier {
         def androidExtension = project.getExtensions().findByName("android")
         String opencvDir = new File(project.getBuildDir(), "androidopencv").getPath()
 
+        // TODO: 14-Oct-19 ahasbini: implement tests to validate below
         androidExtension.getDefaultConfig().getExternalNativeBuildOptions().cmake {
             if (!cppFlags.contains('-frtti')) {
                 cppFlags.add('-frtti')
@@ -32,6 +34,7 @@ class AndroidBuildScriptModifier {
             arguments.add("-DOpenCV_DIR=${opencvDir}/sdk/native/jni".toString())
         }
 
+        // TODO: 14-Oct-19 ahasbini: implement tests to validate below
         androidExtension.sourceSets {
             main {
                 java.srcDirs = [java.srcDirs, "${opencvDir}/sdk/java/src"]

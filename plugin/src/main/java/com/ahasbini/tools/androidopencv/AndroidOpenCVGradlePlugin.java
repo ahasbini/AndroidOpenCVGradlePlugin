@@ -61,7 +61,8 @@ public class AndroidOpenCVGradlePlugin implements Plugin<Project> {
             androidBuildScriptModifier.modifyAndroidBuildScript();
         } catch (Exception e) {
             throw new PluginException("Couldn't modify the android block to include Android OpenCV " +
-                    "libs", e);
+                    "libs" + ".\n" +
+                    "Caused by: " + e.getLocalizedMessage(), e);
         }
     }
 
@@ -116,7 +117,8 @@ public class AndroidOpenCVGradlePlugin implements Plugin<Project> {
                     }
                 } catch (Exception e) {
                     // TODO: 12-Oct-19 ahasbini: externalize message
-                    throw new PluginException("Unable to download " + requestedVersion, e);
+                    throw new PluginException("Unable to download " + requestedVersion + ".\n" +
+                            "Caused by: " + e.getLocalizedMessage(), e);
                 }
             }
 
@@ -163,7 +165,8 @@ public class AndroidOpenCVGradlePlugin implements Plugin<Project> {
                 } catch (IOException e) {
                     // TODO: 12-Oct-19 ahasbini: externalize message
                     throw new PluginException("Android Gradle Plugin was unable to process zip file: " +
-                            androidOpenCVRequestedZipFile.getAbsolutePath(), e);
+                            androidOpenCVRequestedZipFile.getAbsolutePath() + ".\n" +
+                            "Caused by: " + e.getLocalizedMessage(), e);
                 }
             }
 
@@ -181,26 +184,49 @@ public class AndroidOpenCVGradlePlugin implements Plugin<Project> {
                         androidOpenCVBuildDir.getAbsolutePath()));
             }
 
-            // Copy the needed files into the project android opencv dir
-            if (androidOpenCVExtractedFiles.length == 1) {
-                try {
-                    filesManager.recursiveCopy(new File(androidOpenCVExtractedFiles[0], "sdk"),
-                            new File(androidOpenCVBuildDir, "sdk"), new FilenameFilter() {
+            File[] androidOpenCVBuildFiles = androidOpenCVBuildDir.listFiles();
+            if (androidOpenCVBuildFiles == null || androidOpenCVBuildFiles.length == 0) {
+                // Copy the needed files into the project android opencv dir
+                if (androidOpenCVExtractedFiles.length == 1 &&
+                        androidOpenCVExtractedFiles[0].getName().endsWith("OpenCV-android-sdk") &&
+                        androidOpenCVExtractedFiles[0].isDirectory()) {
+                    try {
+                        filesManager.recursiveCopy(
+                                new File(androidOpenCVExtractedFiles[0], "sdk"),
+                                new File(androidOpenCVBuildDir, "sdk"), new FilenameFilter() {
 
-                                @Override
-                                public boolean accept(File dir, String name) {
-                                    return !(name.contains("AndroidManifest.xml") ||
-                                            name.contains("build.gradle") ||
-                                            name.contains("libcxx_helper"));
-                                }
-                            });
-                } catch (IOException e) {
-                    throw new PluginException("Unable to copy downloaded files to project build directory", e);
+                                    @Override
+                                    public boolean accept(File dir, String name) {
+                                        return !(name.contains("AndroidManifest.xml") ||
+                                                name.contains("build.gradle") ||
+                                                name.contains("libcxx_helper"));
+                                    }
+                                });
+                        androidOpenCVBuildFiles = androidOpenCVBuildDir.listFiles();
+
+                        if (androidOpenCVBuildFiles == null ||
+                                androidOpenCVBuildFiles.length == 0) {
+                            throw new IllegalStateException("Copying files completed but files " +
+                                    "were not found in destination path");
+                        }
+
+                    } catch (IOException e) {
+                        throw new PluginException("Unable to copy downloaded files to project " +
+                                "build directory.\n" +
+                                "Caused by: " + e.getLocalizedMessage(), e);
+                    }
+                } else {
+                    // TODO: 14-Oct-19 ahasbini: externalize message
+                    throw new PluginException("Failed to find the files needed for copying");
                 }
+            }
+
+            logger.info("Files in build dir:");
+            for (File androidOpenCVBuildFile : androidOpenCVBuildFiles) {
+                logger.info("\t{}", androidOpenCVBuildFile.getAbsolutePath());
             }
 
             logger.info("execute finished");
         }
     }
-
 }

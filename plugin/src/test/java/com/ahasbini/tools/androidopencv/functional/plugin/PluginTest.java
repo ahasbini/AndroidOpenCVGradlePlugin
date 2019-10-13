@@ -112,5 +112,31 @@ public class PluginTest extends BaseFunctionalTest {
                 .withArguments("--stacktrace", "-PENABLE_ANDROID_OPENCV_LOGS", "-m", ":assemble")
                 .withGradleVersion("4.1")
                 .build();
+
+        // TODO: 13-Oct-19 ahasbini: assert the results 
+    }
+
+    @Test
+    public void testSuccessfulConsecutiveBuilds() throws IOException, URISyntaxException {
+
+        // SETUP
+        writeFolderContentsFromClasspath("/PluginTest_testSuccessfulConsecutiveBuilds",
+                getTestProjectDir().getRoot());
+        injectBuildScriptClassPath(new File(getTestProjectDir().getRoot(), "build.gradle"),
+                getPluginClassPath());
+
+        BuildResult result = getGradleRunnerBuilder()
+                .withProjectDir(testProjectDir.getRoot())
+                .withArguments("--stacktrace", "-PENABLE_ANDROID_OPENCV_LOGS", "-m", ":assemble")
+                .withGradleVersion("4.1")
+                .build();
+
+        result = getGradleRunnerBuilder()
+                .withProjectDir(testProjectDir.getRoot())
+                .withArguments("--stacktrace", "-PENABLE_ANDROID_OPENCV_LOGS", "-m", ":assemble")
+                .withGradleVersion("4.1")
+                .build();
+
+        // TODO: 13-Oct-19 ahasbini: assert
     }
 }
