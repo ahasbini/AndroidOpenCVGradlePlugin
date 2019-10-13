@@ -1,6 +1,7 @@
 plugins {
     id 'groovy'
     id 'java'
+    id 'maven-publish'
 }
 
 group 'com.ahasbini.tools'
@@ -54,4 +55,17 @@ dependencies {
 
     //noinspection GroovyAssignabilityCheck
     testRuntimeOnly files(createClasspathManifest)
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            artifactId = 'android-opencv-gradle-plugin'
+
+            from components.java
+        }
+    }
+    repositories {
+        mavenLocal()
+    }
 }
