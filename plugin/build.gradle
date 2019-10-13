@@ -13,14 +13,21 @@ task createClasspathManifest {
 
     //noinspection GroovyAssignabilityCheck
     inputs.files sourceSets.main.runtimeClasspath.filter { File f ->
-            !f.name.endsWith(".jar")
+        // Exclude gradle & groovy jars only as they are not need in injection
+        !f.name.matches("gradle-api-.*\\.jar") &&
+                !f.name.matches("groovy-all-.*\\.jar") &&
+                !f.name.matches("gradle-installation-beacon-.*\\.jar")
+
     }
     outputs.dir outputDir
 
     doLast {
         outputDir.mkdirs()
         file("$outputDir/plugin-classpath.txt").text = sourceSets.main.runtimeClasspath.filter { File f ->
-            !f.name.endsWith(".jar")
+            // Exclude gradle & groovy jars only as they are not need in injection
+            !f.name.matches("gradle-api-.*\\.jar") &&
+                    !f.name.matches("groovy-all-.*\\.jar") &&
+                    !f.name.matches("gradle-installation-beacon-.*\\.jar")
         }.join("\n")
     }
 }
@@ -40,6 +47,7 @@ sourceSets {
 dependencies {
     implementation gradleApi()
     implementation localGroovy()
+    implementation 'de.undercouch:gradle-download-task:4.0.0'
 
     testImplementation gradleTestKit()
     testImplementation 'junit:junit:4.12'

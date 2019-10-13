@@ -71,7 +71,7 @@ public class PluginTest extends BaseFunctionalTest {
 
         BuildResult result = getGradleRunnerBuilder()
                 .withProjectDir(testProjectDir.getRoot())
-                .withArguments("-PENABLE_ANDROID_OPENCV_LOGS", ":installAndroidOpenCV")
+                .withArguments("-PENABLE_ANDROID_OPENCV_LOGS")
                 .withGradleVersion("4.1")
                 .buildAndFail();
 
@@ -90,11 +90,27 @@ public class PluginTest extends BaseFunctionalTest {
 
         BuildResult result = getGradleRunnerBuilder()
                 .withProjectDir(testProjectDir.getRoot())
-                .withArguments("-PENABLE_ANDROID_OPENCV_LOGS", ":installAndroidOpenCV")
+                .withArguments("-PENABLE_ANDROID_OPENCV_LOGS")
                 .withGradleVersion("4.1")
                 .buildAndFail();
 
         Assert.assertTrue(result.getOutput().matches(buildOutputRegex(
                 messages.getString("missing_opencv_version"))));
+    }
+
+    @Test
+    public void testSuccessfulProjectConfiguration() throws IOException, URISyntaxException {
+
+        // SETUP
+        writeFolderContentsFromClasspath("/PluginTest_testSuccessfulProjectConfiguration",
+                getTestProjectDir().getRoot());
+        injectBuildScriptClassPath(new File(getTestProjectDir().getRoot(), "build.gradle"),
+                getPluginClassPath());
+
+        BuildResult result = getGradleRunnerBuilder()
+                .withProjectDir(testProjectDir.getRoot())
+                .withArguments("--stacktrace", "-PENABLE_ANDROID_OPENCV_LOGS", "-m", ":assemble")
+                .withGradleVersion("4.1")
+                .build();
     }
 }
