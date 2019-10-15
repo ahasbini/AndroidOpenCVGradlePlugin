@@ -27,9 +27,6 @@ public class AndroidOpenCVGradlePlugin implements Plugin<Project> {
 
     @Override
     public void apply(Project project) {
-        // TODO: 06-Oct-19 ahasbini: version format: major.minor.subminor.subsubminor
-        // TODO: 06-Oct-19 ahasbini: note the differences between the directories of the old versions and new versions
-        // TODO: 06-Oct-19 ahasbini: optional url config for the directory of opencv (prebuilt or others...)
 
         String enableAndroidOpencvLogs = project.getGradle().getStartParameter()
                 .getProjectProperties().get("ENABLE_ANDROID_OPENCV_LOGS");
@@ -88,6 +85,7 @@ public class AndroidOpenCVGradlePlugin implements Plugin<Project> {
             DownloadManager downloadManager = new DownloadManager(project);
 
             // Check the user profile android opencv cache for existing version or perform download
+            // TODO: 14-Oct-19 ahasbini: create a test with different user home location
             File androidOpenCVCacheDir = new File(System.getProperty("user.home"),
                     ".androidopencv");
             if (filesManager.checkOrCreateDirectory(androidOpenCVCacheDir)) {

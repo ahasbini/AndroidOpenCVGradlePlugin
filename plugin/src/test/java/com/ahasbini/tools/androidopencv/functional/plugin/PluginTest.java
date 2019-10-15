@@ -99,10 +99,11 @@ public class PluginTest extends BaseFunctionalTest {
     }
 
     @Test
-    public void testSuccessfulProjectConfiguration() throws IOException, URISyntaxException {
+    public void testSuccessfulProjectConfigurationWithDryRun() throws IOException, URISyntaxException {
 
         // SETUP
-        writeFolderContentsFromClasspath("/PluginTest_testSuccessfulProjectConfiguration",
+        writeFolderContentsFromClasspath(
+                "/PluginTest_testSuccessfulProjectConfigurationWithDryRun",
                 getTestProjectDir().getRoot());
         injectBuildScriptClassPath(new File(getTestProjectDir().getRoot(), "build.gradle"),
                 getPluginClassPath());
@@ -117,10 +118,11 @@ public class PluginTest extends BaseFunctionalTest {
     }
 
     @Test
-    public void testSuccessfulConsecutiveBuilds() throws IOException, URISyntaxException {
+    public void testSuccessfulConsecutiveBuildsWithDryRun() throws IOException, URISyntaxException {
 
         // SETUP
-        writeFolderContentsFromClasspath("/PluginTest_testSuccessfulConsecutiveBuilds",
+        writeFolderContentsFromClasspath(
+                "/PluginTest_testSuccessfulConsecutiveBuildsWithDryRun",
                 getTestProjectDir().getRoot());
         injectBuildScriptClassPath(new File(getTestProjectDir().getRoot(), "build.gradle"),
                 getPluginClassPath());
@@ -132,6 +134,25 @@ public class PluginTest extends BaseFunctionalTest {
                 .build();
 
         result = getGradleRunnerBuilder()
+                .withProjectDir(testProjectDir.getRoot())
+                .withArguments("--stacktrace", "-PENABLE_ANDROID_OPENCV_LOGS", "-m", ":assemble")
+                .withGradleVersion("4.1")
+                .build();
+
+        // TODO: 13-Oct-19 ahasbini: assert
+    }
+
+    @Test
+    public void testSuccessfulBuildWithCustomUrlWithDryRun() throws IOException, URISyntaxException {
+
+        // SETUP
+        writeFolderContentsFromClasspath(
+                "/PluginTest_testSuccessfulBuildWithCustomUrlWithDryRun",
+                getTestProjectDir().getRoot());
+        injectBuildScriptClassPath(new File(getTestProjectDir().getRoot(), "build.gradle"),
+                getPluginClassPath());
+
+        BuildResult result = getGradleRunnerBuilder()
                 .withProjectDir(testProjectDir.getRoot())
                 .withArguments("--stacktrace", "-PENABLE_ANDROID_OPENCV_LOGS", "-m", ":assemble")
                 .withGradleVersion("4.1")

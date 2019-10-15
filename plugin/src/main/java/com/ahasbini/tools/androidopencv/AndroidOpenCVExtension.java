@@ -7,6 +7,7 @@ public class AndroidOpenCVExtension {
 
 
     private String version = null;
+    private String url = null;
 
     public String getVersion() {
         return version;
@@ -20,14 +21,23 @@ public class AndroidOpenCVExtension {
         this.version = version;
     }
 
-    public void version(int version) {
-        this.version = version + "";
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    public void url(String url) {
+        this.url = url;
     }
 
     @Override
     public String toString() {
-        return "AndroidCVExtension{" +
+        return "AndroidOpenCVExtension{" +
                 "version='" + version + '\'' +
+                ", url='" + url + '\'' +
                 '}';
     }
 }

@@ -1,5 +1,6 @@
 package com.ahasbini.tools.androidopencv.service;
 
+import com.ahasbini.tools.androidopencv.AndroidOpenCVExtension;
 import com.ahasbini.tools.androidopencv.logging.Logger;
 
 import org.gradle.api.Project;
@@ -34,9 +35,18 @@ public class DownloadManager {
     }
 
     private String getResolvedUrl(String version) {
-        // TODO: 12-Oct-19 ahasbini: cover other possibly malformed url such as: 
-        // TODO: 12-Oct-19 ahasbini: https://sourceforge.net/projects/opencvlibrary/files/opencv-android/2.4.13/opencv-2.4.13.2-android-sdk.zip
-        return "https://sourceforge.net/projects/opencvlibrary/files/" + version + "/opencv-" +
-                version +"-android-sdk.zip";
+        AndroidOpenCVExtension androidOpenCVExtension = project.getExtensions()
+                .getByType(AndroidOpenCVExtension.class);
+
+        String url = "https://sourceforge.net/projects/opencvlibrary/files/" + version + "/opencv-" +
+                version + "-android-sdk.zip";
+
+        if (androidOpenCVExtension.getUrl() != null && !androidOpenCVExtension.getUrl().equals("")) {
+            url = androidOpenCVExtension.getUrl();
+            if (url.contains("sourceforge.net")) {
+                url = url.replace("/download", "");
+            }
+        }
+        return url;
     }
 }

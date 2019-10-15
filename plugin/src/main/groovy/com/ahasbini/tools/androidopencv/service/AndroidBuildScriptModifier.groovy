@@ -35,18 +35,19 @@ class AndroidBuildScriptModifier {
         }
 
         // TODO: 14-Oct-19 ahasbini: implement tests to validate below
-        androidExtension.sourceSets {
-            main {
-                java.srcDirs = [java.srcDirs, "${opencvDir}/sdk/java/src"]
-                java.exclude "${opencvDir}/sdk/java/src/org/opencv/engine/OpenCVEngineInterface.aidl"
-                res.srcDirs = [java.srcDirs, "${opencvDir}/sdk/java/res"]
-                assets.srcDirs = [assets.srcDirs, "${opencvDir}/sdk/etc"]
-                aidl.srcDirs = [aidl.srcDirs, "${opencvDir}/sdk/java/src/org/opencv/engine/OpenCVEngineInterface.aidl"]
-                jni.srcDirs = [jni.srcDirs, "${opencvDir}/sdk/native/jni/include"]
-                jniLibs.srcDirs = [jniLibs.srcDirs, "${opencvDir}/sdk/native/3rdparty/libs",
-                                   "${opencvDir}/sdk/native/libs",
-                                   "${opencvDir}/sdk/native/staticlibs"]
-            }
+        androidExtension.sourceSets.main {
+            java.srcDirs = [java.srcDirs, "${opencvDir}/sdk/java/src"].flatten()
+            java.exclude "${opencvDir}/sdk/java/src/org/opencv/engine/OpenCVEngineInterface.aidl"
+            res.srcDirs = [res.srcDirs, "${opencvDir}/sdk/java/res"].flatten()
+            assets.srcDirs = [assets.srcDirs, "${opencvDir}/sdk/etc"].flatten()
+            aidl.srcDirs = [
+                    aidl.srcDirs,
+                    "${opencvDir}/sdk/java/src/org/opencv/engine/OpenCVEngineInterface.aidl"
+            ].flatten()
+            jni.srcDirs = [jni.srcDirs, "${opencvDir}/sdk/native/jni/include"].flatten()
+            jniLibs.srcDirs = [jniLibs.srcDirs, "${opencvDir}/sdk/native/3rdparty/libs",
+                               "${opencvDir}/sdk/native/libs",
+                               "${opencvDir}/sdk/native/staticlibs"].flatten()
         }
     }
 }
