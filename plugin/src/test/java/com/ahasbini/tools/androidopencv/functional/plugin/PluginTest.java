@@ -165,8 +165,7 @@ public class PluginTest extends BaseFunctionalTest {
     public void testSuccessfulBuild() throws IOException, URISyntaxException {
 
         // SETUP
-        writeFolderContentsFromClasspath(
-                "/PluginTest_testSuccessfulBuild",
+        writeFolderContentsFromClasspath("/PluginTest_testSuccessfulBuild",
                 getTestProjectDir().getRoot());
         injectBuildScriptClassPath(new File(getTestProjectDir().getRoot(), "build.gradle"),
                 getPluginClassPath());

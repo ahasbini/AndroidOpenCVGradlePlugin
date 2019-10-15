@@ -1,0 +1,6 @@
+//noinspection GrPackage
+task helloWorld {
+    doLast {
+        println 'Hello world!'
+    }
+}

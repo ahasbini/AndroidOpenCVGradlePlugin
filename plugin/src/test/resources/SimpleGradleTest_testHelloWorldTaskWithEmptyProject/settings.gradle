@@ -1,0 +1,5 @@
+//noinspection GrPackage
+rootProject.name = 'hello-world'
+
+include 'empty-project'
+project(':empty-project').projectDir = file 'build/empty-project'
