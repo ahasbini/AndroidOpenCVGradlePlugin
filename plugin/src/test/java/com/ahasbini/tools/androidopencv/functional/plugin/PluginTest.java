@@ -160,4 +160,23 @@ public class PluginTest extends BaseFunctionalTest {
 
         // TODO: 13-Oct-19 ahasbini: assert
     }
+
+    @Test
+    public void testSuccessfulBuild() throws IOException, URISyntaxException {
+
+        // SETUP
+        writeFolderContentsFromClasspath(
+                "/PluginTest_testSuccessfulBuild",
+                getTestProjectDir().getRoot());
+        injectBuildScriptClassPath(new File(getTestProjectDir().getRoot(), "build.gradle"),
+                getPluginClassPath());
+
+        BuildResult result = getGradleRunnerBuilder()
+                .withProjectDir(testProjectDir.getRoot())
+                .withArguments("--stacktrace", "-PENABLE_ANDROID_OPENCV_LOGS", ":assembleDebug")
+                .withGradleVersion("5.2.1")
+                .buildAndFail();
+
+        // TODO: 13-Oct-19 ahasbini: assert
+    }
 }
