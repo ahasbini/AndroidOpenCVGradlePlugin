@@ -17,7 +17,9 @@ task createClasspathManifest {
         // Exclude gradle & groovy jars only as they are not need in injection
         !f.name.matches("gradle-api-.*\\.jar") &&
                 !f.name.matches("groovy-all-.*\\.jar") &&
-                !f.name.matches("gradle-installation-beacon-.*\\.jar")
+                !f.name.matches("gradle-installation-beacon-.*\\.jar") &&
+                !f.name.matches("slf4j-simple-.*\\.jar") &&
+                !f.name.matches("slf4j-api-.*\\.jar")
 
     }
     outputs.dir outputDir
@@ -28,7 +30,9 @@ task createClasspathManifest {
             // Exclude gradle & groovy jars only as they are not need in injection
             !f.name.matches("gradle-api-.*\\.jar") &&
                     !f.name.matches("groovy-all-.*\\.jar") &&
-                    !f.name.matches("gradle-installation-beacon-.*\\.jar")
+                    !f.name.matches("gradle-installation-beacon-.*\\.jar") &&
+                    !f.name.matches("slf4j-simple-.*\\.jar") &&
+                    !f.name.matches("slf4j-api-.*\\.jar")
         }.join("\n")
     }
 }
@@ -45,10 +49,13 @@ sourceSets {
     }
 }
 
+def toolingApiVersion = gradle.gradleVersion
+
 dependencies {
     implementation gradleApi()
     implementation localGroovy()
     implementation 'de.undercouch:gradle-download-task:4.0.0'
+    compile "org.gradle:gradle-tooling-api:${toolingApiVersion}"
 
     testImplementation gradleTestKit()
     testImplementation 'junit:junit:4.12'

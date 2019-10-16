@@ -68,4 +68,95 @@ public class SimpleGradleTest extends BaseFunctionalTest {
         //noinspection ConstantConditions
         Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":empty-project:tasks").getOutcome());
     }
+
+    @Test
+    public void testModifyDependenciesInAfterEvaluate() throws IOException, URISyntaxException {
+        // SETUP
+
+        writeFolderContentsFromClasspath(
+                "/SimpleGradleTest_testModifyDependenciesInAfterEvaluate",
+                getTestProjectDir().getRoot());
+
+        // TEST
+        BuildResult result = getGradleRunnerBuilder()
+                .withProjectDir(getTestProjectDir().getRoot())
+                .withArguments(":dependencies")
+                .build();
+
+
+        Assert.assertTrue(result.getOutput().matches(buildOutputRegex(
+                "implementation - Implementation only dependencies for source set 'main'. (n)\r\n" +
+                        "\\--- junit:junit:4.12 (n)")));
+        //noinspection ConstantConditions
+        Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":dependencies").getOutcome());
+    }
+
+    @Test
+    public void testAddNonExistingDependencyInAfterEvaluate()
+            throws IOException, URISyntaxException {
+        // SETUP
+
+        writeFolderContentsFromClasspath(
+                "/SimpleGradleTest_testAddNonExistingDependencyInAfterEvaluate",
+                getTestProjectDir().getRoot());
+
+        // TEST
+        BuildResult result = getGradleRunnerBuilder()
+                .withProjectDir(getTestProjectDir().getRoot())
+                .withArguments(":dependencies")
+                .withGradleVersion("4.1")
+                .build();
+
+
+        Assert.assertTrue(result.getOutput().matches(buildOutputRegex(
+                "implementation - Implementation only dependencies for source set 'main'. (n)\r\n" +
+                        "\\--- non-existing-jar-0.0.1 (n)")));
+        //noinspection ConstantConditions
+        Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":dependencies").getOutcome());
+    }
+
+    @Test
+    public void testAddJarDependencyWithMovingInAfterEvaluate()
+            throws IOException, URISyntaxException {
+        // SETUP
+
+        writeFolderContentsFromClasspath(
+                "/SimpleGradleTest_testAddJarDependencyWithMovingInAfterEvaluate",
+                getTestProjectDir().getRoot());
+
+        // TEST
+        BuildResult result = getGradleRunnerBuilder()
+                .withProjectDir(getTestProjectDir().getRoot())
+                .withArguments(":dependencies")
+                .withGradleVersion("4.1")
+                .build();
+
+
+        Assert.assertTrue(result.getOutput().matches(buildOutputRegex(
+                "implementation - Implementation only dependencies for source set 'main'. (n)\r\n" +
+                        "\\--- existing-after-move-jar:0.0.1 (n)")));
+        //noinspection ConstantConditions
+        Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":dependencies").getOutcome());
+    }
+
+    @Test
+    public void testAddJarDependencyWithMovingInAfterEvaluateWithCompilation()
+            throws IOException, URISyntaxException {
+        // SETUP
+
+        writeFolderContentsFromClasspath(
+                "/SimpleGradleTest_testAddJarDependencyWithMovingInAfterEvaluateWithCompilation",
+                getTestProjectDir().getRoot());
+
+        // TEST
+        BuildResult result = getGradleRunnerBuilder()
+                .withProjectDir(getTestProjectDir().getRoot())
+                .withArguments(":assemble")
+                .withGradleVersion("4.1")
+                .build();
+
+
+        //noinspection ConstantConditions
+        Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":assemble").getOutcome());
+    }
 }

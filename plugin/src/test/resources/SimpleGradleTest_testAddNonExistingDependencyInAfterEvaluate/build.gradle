@@ -1,0 +1,25 @@
+//noinspection GrPackage
+
+plugins {
+    id 'java'
+}
+
+
+repositories {
+    mavenCentral()
+    flatDir {
+        dirs 'libs'
+    }
+}
+
+task helloWorld {
+    doLast {
+        println 'Hello world!'
+    }
+}
+
+afterEvaluate {
+    dependencies {
+        implementation ':non-existing-jar-0.0.1@jar'
+    }
+}

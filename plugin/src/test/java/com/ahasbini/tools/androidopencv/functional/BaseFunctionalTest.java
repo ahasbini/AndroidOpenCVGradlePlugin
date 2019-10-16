@@ -74,7 +74,8 @@ public class BaseFunctionalTest extends BaseTest {
     }
 
     protected String buildOutputRegex(String output) {
-        return "(?s).*" + output.replace("?", "\\?")
+        return "(?s).*" + output.replace("\\", "\\\\")
+                .replace("?", "\\?")
                 .replace("{", "\\{")
                 .replace("}", "\\}")
                 .replace("(", "\\(")

@@ -1,0 +1,33 @@
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
+
+//noinspection GrPackage
+
+plugins {
+    id 'java'
+}
+
+
+repositories {
+    mavenCentral()
+    flatDir {
+        dirs 'libs'
+    }
+}
+
+task helloWorld {
+    doLast {
+        println 'Hello world!'
+    }
+}
+
+afterEvaluate {
+    file('libs').mkdirs()
+    file("test-lib-0.0.1.jar")
+    Files.copy(file("test-lib-0.0.1.jar").toPath(),
+            file('libs/existing-after-move-jar-0.0.1.jar').toPath(),
+            StandardCopyOption.REPLACE_EXISTING)
+    dependencies {
+        implementation ':existing-after-move-jar:0.0.1@jar'
+    }
+}

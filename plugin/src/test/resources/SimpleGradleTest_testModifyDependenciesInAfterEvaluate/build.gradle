@@ -1,0 +1,22 @@
+//noinspection GrPackage
+
+plugins {
+    id 'java'
+}
+
+
+repositories {
+    mavenCentral()
+}
+
+task helloWorld {
+    doLast {
+        println 'Hello world!'
+    }
+}
+
+afterEvaluate {
+    dependencies {
+        implementation 'junit:junit:4.12'
+    }
+}
