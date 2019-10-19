@@ -2,13 +2,14 @@ buildscript {
     repositories {
         mavenLocal()
         jcenter()
-        maven { url "https://plugins.gradle.org/m2/" }
         google()
+        maven { url "https://plugins.gradle.org/m2/" }
+        maven { url 'https://repo.gradle.org/gradle/libs-releases' }
     }
     dependencies {
         //noinspection GradleDependency
         classpath 'com.android.tools.build:gradle:3.4.2'
-        classpath 'com.ahasbini.tools:android-opencv-gradle-plugin:0.0.2-dev'
+        classpath 'com.ahasbini.tools:android-opencv-gradle-plugin:0.0.4-dev'
     }
 }
 
@@ -28,7 +29,7 @@ android {
     defaultConfig {
         minSdkVersion 21
         targetSdkVersion 27
-        versionCode 12
+        versionCode 1
         versionName "0.0.1"
     }
     externalNativeBuild {
