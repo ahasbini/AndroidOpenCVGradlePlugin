@@ -11,8 +11,6 @@ class AndroidBuildScriptModifier {
     private final Logger logger = Logger.getLogger(AndroidBuildScriptModifier)
 
     private Project project
-    private ArrayList<File> libraryPaths
-    private Map
 
     AndroidBuildScriptModifier(Project project) {
         this.project = project
@@ -38,6 +36,8 @@ class AndroidBuildScriptModifier {
     }
 
     void addLibrary(File path, String configurationName, String library) {
+        // TODO: 19-Oct-19 ahasbini: Implement test to validate the below
+
         if (path == null || configurationName == null || library == null) {
             throw new NullPointerException("Parameters can't be null: path=${path}, " +
                     "configurationName=${configurationName}, library=${library}")
@@ -46,23 +46,52 @@ class AndroidBuildScriptModifier {
         logger.info("Adding dependency {} {} in {}", configurationName, library,
                 path.getAbsolutePath())
 
-        // TODO: 19-Oct-19 ahasbini: check if repo exists before adding
-        project.repositories {
-            flatDir {
-                dirs path
+        String repoName = "AndroidOpenCVFlatDir " + path.getPath()
+        boolean isRepoExisting = false
+        project.repositories.each {
+            if (it.name == repoName) {
+                logger.info("Found repo '{}' already existing", it.name)
+                isRepoExisting = true
+                return
+            }
+        }
+
+        if (!isRepoExisting) {
+            project.repositories {
+                flatDir {
+                    name repoName
+                    dirs path
+                }
             }
         }
 
         project.repositories.each {
-            println it.dump()
-            println it.name
+            logger.info("Final repo in project: {}", it.name)
         }
 
-        project.dependencies.add(configurationName, library)
+        boolean isDependencyExisting = false
+        project.configurations.getByName(configurationName).getDependencies().each {
+            String existingLibrary = it.getGroup() + ":" + it.getName() + ":" + it.getVersion() +
+                    "@aar"
 
-        project.dependencies.each {
-            println it.dump()
-            println it.toString()
+            if (existingLibrary == library) {
+                logger.info("Found library {} in configuration {} already existing",
+                        existingLibrary, configurationName)
+                isDependencyExisting = true
+                return
+            }
+        }
+
+        if (!isDependencyExisting) {
+            project.dependencies.add(configurationName, library)
+        }
+
+        project.configurations.each {
+            def existingConfigurationName = it.getName()
+            it.getDependencies().each {
+                logger.info("Final dependency in configuration: {} {}",
+                        existingConfigurationName, it.toString())
+            }
         }
     }
 }
