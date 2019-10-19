@@ -5,7 +5,7 @@ plugins {
 }
 
 group 'com.ahasbini.tools'
-version '0.0.2-dev'
+version '0.0.3-dev'
 
 sourceCompatibility = 1.8
 
