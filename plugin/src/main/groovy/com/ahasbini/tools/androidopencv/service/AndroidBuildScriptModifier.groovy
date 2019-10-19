@@ -11,6 +11,8 @@ class AndroidBuildScriptModifier {
     private final Logger logger = Logger.getLogger(AndroidBuildScriptModifier)
 
     private Project project
+    private ArrayList<File> libraryPaths
+    private Map
 
     AndroidBuildScriptModifier(Project project) {
         this.project = project
@@ -33,21 +35,34 @@ class AndroidBuildScriptModifier {
 
             arguments.add("-DOpenCV_DIR=${opencvDir}/sdk/native/jni".toString())
         }
+    }
 
-        // TODO: 14-Oct-19 ahasbini: implement tests to validate below
-        androidExtension.sourceSets.main {
-            java.srcDirs = [java.srcDirs, "${opencvDir}/sdk/java/src"].flatten()
-            java.exclude "${opencvDir}/sdk/java/src/org/opencv/engine/OpenCVEngineInterface.aidl"
-            res.srcDirs = [res.srcDirs, "${opencvDir}/sdk/java/res"].flatten()
-            assets.srcDirs = [assets.srcDirs, "${opencvDir}/sdk/etc"].flatten()
-            aidl.srcDirs = [
-                    aidl.srcDirs,
-                    "${opencvDir}/sdk/java/src/org/opencv/engine/OpenCVEngineInterface.aidl"
-            ].flatten()
-            jni.srcDirs = [jni.srcDirs, "${opencvDir}/sdk/native/jni/include"].flatten()
-            jniLibs.srcDirs = [jniLibs.srcDirs, "${opencvDir}/sdk/native/3rdparty/libs",
-                               "${opencvDir}/sdk/native/libs",
-                               "${opencvDir}/sdk/native/staticlibs"].flatten()
+    void addLibrary(File path, String configurationName, String library) {
+        if (path == null || configurationName == null || library == null) {
+            throw new NullPointerException("Parameters can't be null: path=${path}, " +
+                    "configurationName=${configurationName}, library=${library}")
+        }
+
+        logger.info("Adding dependency {} {} in {}", configurationName, library,
+                path.getAbsolutePath())
+
+        // TODO: 19-Oct-19 ahasbini: check if repo exists before adding
+        project.repositories {
+            flatDir {
+                dirs path
+            }
+        }
+
+        project.repositories.each {
+            println it.dump()
+            println it.name
+        }
+
+        project.dependencies.add(configurationName, library)
+
+        project.dependencies.each {
+            println it.dump()
+            println it.toString()
         }
     }
 }

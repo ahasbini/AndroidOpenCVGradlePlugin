@@ -10,10 +10,15 @@ import org.gradle.api.NonNullApi;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.plugins.PluginManager;
+import org.gradle.tooling.BuildLauncher;
+import org.gradle.tooling.GradleConnector;
+import org.gradle.tooling.ProjectConnection;
 
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
 import java.util.ResourceBundle;
 
 /**
@@ -83,18 +88,20 @@ public class AndroidOpenCVGradlePlugin implements Plugin<Project> {
 
             FilesManager filesManager = new FilesManager(project);
             DownloadManager downloadManager = new DownloadManager(project);
+            AndroidBuildScriptModifier androidBuildScriptModifier =
+                    new AndroidBuildScriptModifier(project);
 
             // Check the user profile android opencv cache for existing version or perform download
             // TODO: 14-Oct-19 ahasbini: create a test with different user home location
             File androidOpenCVCacheDir = new File(System.getProperty("user.home"),
                     ".androidopencv");
-            if (filesManager.checkOrCreateDirectory(androidOpenCVCacheDir)) {
+            if (!filesManager.checkOrCreateDirectory(androidOpenCVCacheDir)) {
                 throw new PluginException(String.format(messages.getString("cannot_create_dir"),
                         androidOpenCVCacheDir.getAbsolutePath()));
             }
 
             File versionCacheDir = new File(androidOpenCVCacheDir, requestedVersion);
-            if (filesManager.checkOrCreateDirectory(versionCacheDir)) {
+            if (!filesManager.checkOrCreateDirectory(versionCacheDir)) {
                 throw new PluginException(String.format(messages.getString("cannot_create_dir"),
                         versionCacheDir.getAbsolutePath()));
             }
@@ -125,13 +132,8 @@ public class AndroidOpenCVGradlePlugin implements Plugin<Project> {
                 logger.info("\t{}", cacheFile.getAbsolutePath());
             }
 
-            File[] zips = versionCacheDir.listFiles(new FilenameFilter() {
-
-                @Override
-                public boolean accept(File dir, String name) {
-                    return name.endsWith("zip");
-                }
-            });
+            File[] zips = versionCacheDir.listFiles(
+                    (dir, name) -> name.endsWith("zip"));
 
             if (zips == null || zips.length != 1) {
                 // TODO: 12-Oct-19 ahasbini: externalize message
@@ -143,7 +145,7 @@ public class AndroidOpenCVGradlePlugin implements Plugin<Project> {
 
             File androidOpenCVExtractedZipDir = new File(versionCacheDir,
                     androidOpenCVRequestedZipFile.getName().replace(".zip", ""));
-            if (filesManager.checkOrCreateDirectory(androidOpenCVExtractedZipDir)) {
+            if (!filesManager.checkOrCreateDirectory(androidOpenCVExtractedZipDir)) {
                 throw new PluginException(String.format(messages.getString("cannot_create_dir"),
                         androidOpenCVExtractedZipDir.getAbsolutePath()));
             }
@@ -173,17 +175,18 @@ public class AndroidOpenCVGradlePlugin implements Plugin<Project> {
                 logger.info("\t{}", androidOpenCVExtractedFile.getAbsolutePath());
             }
 
-            // TODO: 12-Oct-19 ahasbini: implement verification of files using SHA1
+            // TODO: 12-Oct-19 ahasbini: implement verification of files using SHA1/MD5
 
             // Create the project android opencv dir
-            File androidOpenCVBuildDir = new File(project.getBuildDir(), "androidopencv");
-            if (filesManager.checkOrCreateDirectory(androidOpenCVBuildDir)) {
+            File androidOpenCVProjectBuildDir = new File(project.getBuildDir(),
+                    "androidopencv");
+            if (!filesManager.checkOrCreateDirectory(androidOpenCVProjectBuildDir)) {
                 throw new PluginException(String.format(messages.getString("cannot_create_dir"),
-                        androidOpenCVBuildDir.getAbsolutePath()));
+                        androidOpenCVProjectBuildDir.getAbsolutePath()));
             }
 
-            File[] androidOpenCVBuildFiles = androidOpenCVBuildDir.listFiles();
-            if (androidOpenCVBuildFiles == null || androidOpenCVBuildFiles.length == 0) {
+            File[] androidOpenCVProjectBuildFiles = androidOpenCVProjectBuildDir.listFiles();
+            if (androidOpenCVProjectBuildFiles == null || androidOpenCVProjectBuildFiles.length == 0) {
                 // Copy the needed files into the project android opencv dir
                 if (androidOpenCVExtractedFiles.length == 1 &&
                         androidOpenCVExtractedFiles[0].getName().endsWith("OpenCV-android-sdk") &&
@@ -191,19 +194,19 @@ public class AndroidOpenCVGradlePlugin implements Plugin<Project> {
                     try {
                         filesManager.recursiveCopy(
                                 new File(androidOpenCVExtractedFiles[0], "sdk"),
-                                new File(androidOpenCVBuildDir, "sdk"), new FilenameFilter() {
+                                new File(androidOpenCVProjectBuildDir, "sdk"),
+                                (dir, name) -> (
+                                        name.equals("native") &&
+                                                dir.getPath().endsWith("sdk")
+                                ) || dir.getPath().matches(
+                                        ".*sdk" +
+                                                File.separator.replace("\\",
+                                                        "\\\\") +
+                                                "native.*"));
+                        androidOpenCVProjectBuildFiles = androidOpenCVProjectBuildDir.listFiles();
 
-                                    @Override
-                                    public boolean accept(File dir, String name) {
-                                        return !(name.contains("AndroidManifest.xml") ||
-                                                name.contains("build.gradle") ||
-                                                name.contains("libcxx_helper"));
-                                    }
-                                });
-                        androidOpenCVBuildFiles = androidOpenCVBuildDir.listFiles();
-
-                        if (androidOpenCVBuildFiles == null ||
-                                androidOpenCVBuildFiles.length == 0) {
+                        if (androidOpenCVProjectBuildFiles == null ||
+                                androidOpenCVProjectBuildFiles.length == 0) {
                             throw new IllegalStateException("Copying files completed but files " +
                                     "were not found in destination path");
                         }
@@ -220,8 +223,113 @@ public class AndroidOpenCVGradlePlugin implements Plugin<Project> {
             }
 
             logger.info("Files in build dir:");
-            for (File androidOpenCVBuildFile : androidOpenCVBuildFiles) {
+            for (File androidOpenCVBuildFile : androidOpenCVProjectBuildFiles) {
                 logger.info("\t{}", androidOpenCVBuildFile.getAbsolutePath());
+            }
+
+            // Build AAR binaries in user cache dir using Gradle Tooling API
+            File androidOpenCVBuildCacheDir = new File(versionCacheDir, "build-cache");
+            if (!filesManager.checkOrCreateDirectory(androidOpenCVBuildCacheDir)) {
+                throw new PluginException(String.format(messages.getString("cannot_create_dir"),
+                        androidOpenCVBuildCacheDir.getAbsolutePath()));
+            }
+
+            File androidOpenCVBuildCacheOutputsDir = new File(androidOpenCVBuildCacheDir,
+                    "outputs");
+            if (!filesManager.checkOrCreateDirectory(androidOpenCVBuildCacheOutputsDir)) {
+                throw new PluginException(String.format(messages.getString("cannot_create_dir"),
+                        androidOpenCVBuildCacheOutputsDir.getAbsolutePath()));
+            }
+
+            File[] androidOpenCVBuildCacheFiles = androidOpenCVBuildCacheOutputsDir.listFiles(
+                    (dir, name) -> name.endsWith(".aar"));
+            if (androidOpenCVBuildCacheFiles == null || androidOpenCVBuildCacheFiles.length == 0) {
+
+                logger.info("Compiling OpenCV aar binaries");
+
+                // Create gradle.properties file with needed variables
+                try {
+                    File androidOpenCVBuildGradlePropFile = new File(androidOpenCVBuildCacheDir,
+                            "gradle.properties");
+                    if (!filesManager.checkOrCreateFile(androidOpenCVBuildGradlePropFile)) {
+                        throw new IOException("Unable to create 'gradle.properties file");
+                    }
+
+                    char[] versionCodeOriginal =
+                            requestedVersion.replace(".", "").toCharArray();
+                    char[] versionCodeFinal = {'0', '0', '0', '0'};
+                    System.arraycopy(versionCodeOriginal, 0, versionCodeFinal, 0,
+                            versionCodeOriginal.length);
+
+                    ArrayList<String> lines = new ArrayList<>();
+                    lines.add("opencv_dir=" +
+                            androidOpenCVExtractedFiles[0].getAbsolutePath()
+                                    .replace("\\", "\\\\"));
+                    lines.add("opencv_version_name=" + requestedVersion);
+                    lines.add("opencv_version_code=" + new String(versionCodeFinal));
+
+                    Files.write(androidOpenCVBuildGradlePropFile.toPath(), lines,
+                            StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
+                } catch (IOException e) {
+                    throw new PluginException("Unable to create/write 'gradle.properties' file.\n" +
+                            "Caused by: " + e.getLocalizedMessage(), e);
+                }
+
+                // Copy build scripts from classpath
+                try {
+                    filesManager.writeFolderContentsFromClasspath("/build-cache-scripts",
+                            androidOpenCVBuildCacheDir);
+                } catch (Exception e) {
+                    throw new PluginException("Unable to create/write build scripts.\n" +
+                            "Caused by: " + e.getLocalizedMessage(), e);
+                }
+
+                // Build AAR binaries
+                try (ProjectConnection buildCacheProjectConnection = GradleConnector.newConnector()
+                        .forProjectDirectory(androidOpenCVBuildCacheDir)
+                        .useGradleVersion("4.1")
+                        .connect()) {
+
+                    BuildLauncher launcher = buildCacheProjectConnection.newBuild()
+                            .forTasks(":compileOpenCV")
+                            // TODO: 18-Oct-19 ahasbini: wrap around in logger or something else
+                            .setStandardOutput(System.out)
+                            .setStandardError(System.err);
+
+                    launcher.run();
+
+                    androidOpenCVBuildCacheFiles = androidOpenCVBuildCacheOutputsDir.listFiles(
+                            (dir, name) -> name.endsWith(".aar"));
+
+                    if (androidOpenCVBuildCacheFiles == null ||
+                            androidOpenCVBuildCacheFiles.length == 0) {
+                        throw new IllegalStateException("Binaries wer compiled but " +
+                                "files were not found in destination path");
+                    }
+                } catch (Exception e) {
+                    throw new PluginException("Unable to compile binaries.\n" +
+                            "Caused by: " + e.getLocalizedMessage(), e);
+                }
+            }
+
+            // Add built AARs to project dependencies
+            try {
+                for (File androidOpenCVBuildCacheFile : androidOpenCVBuildCacheFiles) {
+                    String configurationName =
+                            androidOpenCVBuildCacheFile.getName().matches(".*-debug-.*") ?
+                                    "debugImplementation" :
+                                    (androidOpenCVBuildCacheFile.getName().matches(".*-release-.*") ?
+                                            "releaseImplementation" : null);
+                    androidBuildScriptModifier.addLibrary(
+                            androidOpenCVBuildCacheFile.getParentFile(),
+                            configurationName,
+                            ":" + androidOpenCVBuildCacheFile.getName()
+                                    .replace("-" + requestedVersion + ".",
+                                            ":" + requestedVersion + "@"));
+                }
+            } catch (Exception e) {
+                throw new PluginException("Unable to copy compiled binaries.\n" +
+                        "Caused by: " + e.getLocalizedMessage(), e);
             }
 
             logger.info("execute finished");

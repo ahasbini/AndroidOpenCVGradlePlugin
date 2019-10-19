@@ -8,8 +8,14 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -58,19 +64,62 @@ public class FilesManager {
         }
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean checkOrCreateDirectory(File directory) {
-        return (!directory.exists() || !directory.isDirectory())
-                && !directory.mkdirs();
+        return (directory.exists() && directory.isDirectory()) || directory.mkdirs();
     }
 
-    public void recursiveCopy(File src, File dst,FilenameFilter filter) throws IOException {
-        Files.copy(src.toPath(), dst.toPath(), StandardCopyOption.REPLACE_EXISTING);
+    public void recursiveCopy(File src, File dst, FilenameFilter filter) throws IOException {
         if (src.isDirectory()) {
+            if (dst.exists()) {
+                Files.walkFileTree(dst.toPath(), new SimpleFileVisitor<Path>() {
+
+                    @Override
+                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                            throws IOException {
+                        if (new File(file.toUri()).delete()) {
+                            return super.visitFile(file, attrs);
+                        } else {
+                            throw new IOException("Couldn't delete file: " + file.toString());
+                        }
+                    }
+
+                    @Override
+                    public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                        if (new File(dir.toUri()).delete()) {
+                            return super.postVisitDirectory(dir, exc);
+                        } else {
+                            throw new IOException("Couldn't delete directory: " + dir.toString());
+                        }
+                    }
+                });
+            }
+            //noinspection ResultOfMethodCallIgnored
+            dst.delete();
+            Files.copy(src.toPath(), dst.toPath(), StandardCopyOption.REPLACE_EXISTING);
             File[] files = src.listFiles(filter);
             if (files != null) {
                 for (File file : files) {
                     recursiveCopy(file, new File(dst, file.getName()), filter);
                 }
+            }
+        } else {
+            Files.copy(src.toPath(), dst.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        }
+    }
+
+    public boolean checkOrCreateFile(File file) throws IOException {
+        return (file.exists() && !file.isDirectory()) || file.createNewFile();
+    }
+
+    public void writeFolderContentsFromClasspath(String classpath, File directory)
+            throws URISyntaxException, IOException {
+        URL resource = getClass().getResource(classpath);
+        File classpathDir = new File(resource.toURI());
+        File[] files = classpathDir.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                recursiveCopy(file, new File(directory, file.getName()), null);
             }
         }
     }

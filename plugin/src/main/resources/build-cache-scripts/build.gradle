@@ -1,0 +1,98 @@
+//noinspection GrPackage
+
+buildscript {
+    repositories {
+        jcenter()
+        google()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:3.0.1'
+    }
+}
+
+allprojects {
+    repositories {
+        jcenter()
+        google()
+    }
+}
+
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 27
+    buildToolsVersion '27.0.1'
+
+    defaultConfig {
+        minSdkVersion 21
+        targetSdkVersion 27
+        versionCode opencv_version_code as int
+        versionName "${opencv_version_name}"
+
+        externalNativeBuild {
+            cmake {
+                cppFlags "-frtti -fexceptions"
+                // TODO: 18-Oct-19 ahasbini: Check if abiFilter is needed
+                //abiFilters 'x86', 'x86_64', 'armeabi', 'armeabi-v7a', 'arm64-v8a', 'mips', 'mips64'
+                arguments "-DANDROID_STL=c++_shared", "-DOpenCV_DIR=${opencv_dir}/sdk/native/jni"
+            }
+        }
+    }
+    buildTypes {
+        debug {
+            packagingOptions {
+                doNotStrip '**/*.so'  // controlled by OpenCV CMake scripts
+            }
+        }
+        release {
+            packagingOptions {
+                doNotStrip '**/*.so'  // controlled by OpenCV CMake scripts
+            }
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+        }
+    }
+    externalNativeBuild {
+        cmake {
+            //noinspection GroovyAssignabilityCheck
+            path "CMakeLists.txt"
+        }
+    }
+    sourceSets {
+        //noinspection GroovyAssignabilityCheck
+        main {
+            java.srcDirs = ["${opencv_dir}/sdk/java/src"]
+            java.exclude "${opencv_dir}/sdk/java/src/org/opencv/engine/OpenCVEngineInterface.aidl"
+            res.srcDirs = ["${opencv_dir}/sdk/java/res"]
+            assets.srcDirs = ["${opencv_dir}/sdk/etc"]
+            aidl.srcDirs = [
+                    "${opencv_dir}/sdk/java/src/org/opencv/engine/OpenCVEngineInterface.aidl"]
+            jni.srcDirs = ["${opencv_dir}/sdk/native/jni/include"]
+            jniLibs.srcDirs = ["${opencv_dir}/sdk/native/3rdparty/libs",
+                               "${opencv_dir}/sdk/native/libs",
+                               "${opencv_dir}/sdk/native/staticlibs"]
+        }
+    }
+}
+
+task compileOpenCVDebug(type: Copy) {
+    dependsOn "assembleDebug"
+    from('build/outputs/aar') {
+        include '*-debug.aar'
+    }
+    into new File(project.getProjectDir(), 'outputs')
+    rename '(.+)-debug\\.aar', "\$1-debug-${opencv_version_name}\\.aar"
+}
+
+task compileOpenCVRelease(type: Copy) {
+    dependsOn "assembleRelease"
+    from('build/outputs/aar') {
+        include '*-release.aar'
+    }
+    into new File(project.getProjectDir(), 'outputs')
+    rename '(.+)-release\\.aar', "\$1-release-${opencv_version_name}\\.aar"
+}
+
+task compileOpenCV {
+    dependsOn compileOpenCVDebug, compileOpenCVRelease
+}

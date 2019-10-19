@@ -174,7 +174,7 @@ public class PluginTest extends BaseFunctionalTest {
                 .withProjectDir(testProjectDir.getRoot())
                 .withArguments("--stacktrace", "-PENABLE_ANDROID_OPENCV_LOGS", ":assembleDebug")
                 .withGradleVersion("5.2.1")
-                .buildAndFail();
+                .build();
 
         // TODO: 13-Oct-19 ahasbini: assert
     }
