@@ -10,7 +10,7 @@ Currently the plugin is not yet published on public repositories. To
 use the plugin, it requires to be compiled and published locally on the
 machine for projects to be able to resolve and use it:
 
-```
+```shell
 git clone https://github.com/ahasbini/AndroidOpenCVGradlePlugin.git
 cd AndroidOpenCVGradlePlugin
 
@@ -30,7 +30,7 @@ For usage in an Android Project, the below changes are needed:
   project folder), modify the ```repositories``` and ```dependencies```
   block as below:
 
-```
+```gradle
 buildscript {
     repositories {
         mavenLocal() // At the beginning of the block
@@ -51,13 +51,13 @@ buildscript {
   ```android-opencv-gradle-plugin``` plugin and the ```androidOpenCV```
   as below:
 
-```
+```gradle
 // apply plugin: 'com.android.application' or other Android plugin
 apply plugin: 'com.ahasbini.android-opencv-gradle-plugin' // After the Android plugin
 
 // ...
 
-andoird {
+android {
     // ...
 }
 
@@ -82,8 +82,8 @@ androidOpenCV { // After the android block
    * Add the below in ```app``` module (or application/library module
    that you're developing) ```build.gradle``` file:
 
-    ```
-    andoird {
+    ```gradle
+    android {
         // ...
         externalNativeBuild {
             cmake {
