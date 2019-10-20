@@ -77,7 +77,7 @@ androidOpenCV { // After the android block
 
 3. __Optional__: If the project did not contain any C++ code (usually
    located in ```jni``` or ```cpp``` folders under
-   ```{project_app_module}/src/main/``` ), perform the below changes:
+   ```{project_app_module}/src/main/```), perform the below changes:
 
    * Add the below in ```app``` module (or application/library module
    that you're developing) ```build.gradle``` file:
