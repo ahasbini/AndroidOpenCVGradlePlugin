@@ -1,6 +1,7 @@
 package com.ahasbini.tools.androidopencv;
 
-import com.ahasbini.tools.androidopencv.logging.Logger;
+import com.ahasbini.tools.androidopencv.util.ExceptionUtils;
+import com.ahasbini.tools.androidopencv.util.Logger;
 import com.ahasbini.tools.androidopencv.service.AndroidBuildScriptModifier;
 import com.ahasbini.tools.androidopencv.service.DownloadManager;
 import com.ahasbini.tools.androidopencv.service.FilesManager;
@@ -64,7 +65,7 @@ public class AndroidOpenCVGradlePlugin implements Plugin<Project> {
         } catch (Exception e) {
             throw new PluginException("Couldn't modify the android block to include Android OpenCV " +
                     "libs" + ".\n" +
-                    "Caused by: " + e.getLocalizedMessage(), e);
+                    ExceptionUtils.getCauses(e, messages.getString("caused_by")), e);
         }
     }
 
@@ -123,7 +124,7 @@ public class AndroidOpenCVGradlePlugin implements Plugin<Project> {
                 } catch (Exception e) {
                     // TODO: 12-Oct-19 ahasbini: externalize message
                     throw new PluginException("Unable to download " + requestedVersion + ".\n" +
-                            "Caused by: " + e.getLocalizedMessage(), e);
+                            ExceptionUtils.getCauses(e, messages.getString("caused_by")), e);
                 }
             }
 
@@ -166,7 +167,7 @@ public class AndroidOpenCVGradlePlugin implements Plugin<Project> {
                     // TODO: 12-Oct-19 ahasbini: externalize message
                     throw new PluginException("Android Gradle Plugin was unable to process zip file: " +
                             androidOpenCVRequestedZipFile.getAbsolutePath() + ".\n" +
-                            "Caused by: " + e.getLocalizedMessage(), e);
+                            ExceptionUtils.getCauses(e, messages.getString("caused_by")), e);
                 }
             }
 
@@ -214,7 +215,7 @@ public class AndroidOpenCVGradlePlugin implements Plugin<Project> {
                     } catch (IOException e) {
                         throw new PluginException("Unable to copy downloaded files to project " +
                                 "build directory.\n" +
-                                "Caused by: " + e.getLocalizedMessage(), e);
+                                ExceptionUtils.getCauses(e, messages.getString("caused_by")), e);
                     }
                 } else {
                     // TODO: 14-Oct-19 ahasbini: externalize message
@@ -272,7 +273,7 @@ public class AndroidOpenCVGradlePlugin implements Plugin<Project> {
                             StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
                 } catch (IOException e) {
                     throw new PluginException("Unable to create/write 'gradle.properties' file.\n" +
-                            "Caused by: " + e.getLocalizedMessage(), e);
+                            ExceptionUtils.getCauses(e, messages.getString("caused_by")), e);
                 }
 
                 // Copy build scripts from classpath
@@ -281,7 +282,7 @@ public class AndroidOpenCVGradlePlugin implements Plugin<Project> {
                             androidOpenCVBuildCacheDir);
                 } catch (Exception e) {
                     throw new PluginException("Unable to create/write build scripts.\n" +
-                            "Caused by: " + e.getLocalizedMessage(), e);
+                            ExceptionUtils.getCauses(e, messages.getString("caused_by")), e);
                 }
 
                 // Build AAR binaries
@@ -308,7 +309,7 @@ public class AndroidOpenCVGradlePlugin implements Plugin<Project> {
                     }
                 } catch (Exception e) {
                     throw new PluginException("Unable to compile binaries.\n" +
-                            "Caused by: " + e.getLocalizedMessage(), e);
+                            ExceptionUtils.getCauses(e, messages.getString("caused_by")), e);
                 }
             }
 
@@ -329,7 +330,7 @@ public class AndroidOpenCVGradlePlugin implements Plugin<Project> {
                 }
             } catch (Exception e) {
                 throw new PluginException("Unable to copy compiled binaries.\n" +
-                        "Caused by: " + e.getLocalizedMessage(), e);
+                        ExceptionUtils.getCauses(e, messages.getString("caused_by")), e);
             }
 
             logger.info("execute finished");

@@ -104,7 +104,6 @@ public class SimpleGradleTest extends BaseFunctionalTest {
         BuildResult result = getGradleRunnerBuilder()
                 .withProjectDir(getTestProjectDir().getRoot())
                 .withArguments(":dependencies")
-                .withGradleVersion("4.1")
                 .build();
 
 
@@ -128,7 +127,6 @@ public class SimpleGradleTest extends BaseFunctionalTest {
         BuildResult result = getGradleRunnerBuilder()
                 .withProjectDir(getTestProjectDir().getRoot())
                 .withArguments(":dependencies")
-                .withGradleVersion("4.1")
                 .build();
 
 
@@ -152,7 +150,6 @@ public class SimpleGradleTest extends BaseFunctionalTest {
         BuildResult result = getGradleRunnerBuilder()
                 .withProjectDir(getTestProjectDir().getRoot())
                 .withArguments(":assemble")
-                .withGradleVersion("4.1")
                 .build();
 
 

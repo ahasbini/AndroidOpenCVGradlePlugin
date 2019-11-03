@@ -1,7 +1,7 @@
 package com.ahasbini.tools.androidopencv.service;
 
 import com.ahasbini.tools.androidopencv.AndroidOpenCVExtension;
-import com.ahasbini.tools.androidopencv.logging.Logger;
+import com.ahasbini.tools.androidopencv.util.Logger;
 
 import org.gradle.api.Project;
 

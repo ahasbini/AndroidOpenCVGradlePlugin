@@ -14,12 +14,14 @@ import java.util.ResourceBundle;
 /**
  * Created by ahasbini on 05-Oct-19.
  */
-public class PluginTest extends BaseFunctionalTest {
+public class PluginConfigurationTest extends BaseFunctionalTest {
 
     // TODO: 06-Oct-19 ahasbini: Implement test for applying plugin with android gradle plugin and app
     // TODO: 06-Oct-19 ahasbini: Implement test for applying plugin with android gradle plugin and lib
     // TODO: 06-Oct-19 ahasbini: Implement test for applying plugin with android gradle plugin and app and cpp code
     // TODO: 06-Oct-19 ahasbini: Implement test for applying plugin with android gradle plugin and lib and cpp code
+
+    // TODO: 03-Nov-19 ahasbini: find a way to remove withGradleVersion
 
     private final ResourceBundle messages = ResourceBundle.getBundle("messages");
 
@@ -99,25 +101,6 @@ public class PluginTest extends BaseFunctionalTest {
     }
 
     @Test
-    public void testSuccessfulProjectConfigurationWithDryRun() throws IOException, URISyntaxException {
-
-        // SETUP
-        writeFolderContentsFromClasspath(
-                "/PluginTest_testSuccessfulProjectConfigurationWithDryRun",
-                getTestProjectDir().getRoot());
-        injectBuildScriptClassPath(new File(getTestProjectDir().getRoot(), "build.gradle"),
-                getPluginClassPath());
-
-        BuildResult result = getGradleRunnerBuilder()
-                .withProjectDir(testProjectDir.getRoot())
-                .withArguments("--stacktrace", "-PENABLE_ANDROID_OPENCV_LOGS", "-m", ":assemble")
-                .withGradleVersion("4.1")
-                .build();
-
-        // TODO: 13-Oct-19 ahasbini: assert the results 
-    }
-
-    @Test
     public void testSuccessfulConsecutiveBuildsWithDryRun() throws IOException, URISyntaxException {
 
         // SETUP
@@ -129,13 +112,13 @@ public class PluginTest extends BaseFunctionalTest {
 
         BuildResult result = getGradleRunnerBuilder()
                 .withProjectDir(testProjectDir.getRoot())
-                .withArguments("--stacktrace", "-PENABLE_ANDROID_OPENCV_LOGS", "-m", ":assemble")
+                .withArguments("-PENABLE_ANDROID_OPENCV_LOGS", "-m", ":assemble")
                 .withGradleVersion("4.1")
                 .build();
 
         result = getGradleRunnerBuilder()
                 .withProjectDir(testProjectDir.getRoot())
-                .withArguments("--stacktrace", "-PENABLE_ANDROID_OPENCV_LOGS", "-m", ":assemble")
+                .withArguments("-PENABLE_ANDROID_OPENCV_LOGS", "-m", ":assemble")
                 .withGradleVersion("4.1")
                 .build();
 
@@ -154,7 +137,7 @@ public class PluginTest extends BaseFunctionalTest {
 
         BuildResult result = getGradleRunnerBuilder()
                 .withProjectDir(testProjectDir.getRoot())
-                .withArguments("--stacktrace", "-PENABLE_ANDROID_OPENCV_LOGS", "-m", ":assemble")
+                .withArguments("-PENABLE_ANDROID_OPENCV_LOGS", "-m", ":assemble")
                 .withGradleVersion("4.1")
                 .build();
 
@@ -172,10 +155,14 @@ public class PluginTest extends BaseFunctionalTest {
 
         BuildResult result = getGradleRunnerBuilder()
                 .withProjectDir(testProjectDir.getRoot())
-                .withArguments("--stacktrace", "-PENABLE_ANDROID_OPENCV_LOGS", ":assembleDebug")
+                .withArguments("-PENABLE_ANDROID_OPENCV_LOGS", ":assembleDebug")
                 .withGradleVersion("5.2.1")
                 .build();
 
         // TODO: 13-Oct-19 ahasbini: assert
+        // TODO: 02-Nov-19 ahasbini: assert that java sources have been compiled
+        // TODO: 02-Nov-19 ahasbini: assert that opencv has been downloaded and extracted
+        // TODO: 02-Nov-19 ahasbini: assert that native libs have been coped in project dir
+        // TODO: 02-Nov-19 ahasbini: assert that project has compiled successfully and generated outputs
     }
 }

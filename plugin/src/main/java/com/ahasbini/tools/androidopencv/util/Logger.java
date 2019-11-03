@@ -1,4 +1,4 @@
-package com.ahasbini.tools.androidopencv.logging;
+package com.ahasbini.tools.androidopencv.util;
 
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logging;
