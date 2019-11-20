@@ -37,7 +37,7 @@ public class AndroidOpenCVGradlePlugin implements Plugin<Project> {
         String enableAndroidOpencvLogs = project.getGradle().getStartParameter()
                 .getProjectProperties().get("ENABLE_ANDROID_OPENCV_LOGS");
         if (enableAndroidOpencvLogs != null) {
-            logger.quiet("AndroidOpenCVPlugin logs enabled");
+            logger.quiet("AndroidOpenCVGradlePlugin logs enabled");
             Logger.setUseQuietLogs(true);
         }
 
@@ -50,6 +50,7 @@ public class AndroidOpenCVGradlePlugin implements Plugin<Project> {
             throw new PluginException(messages.getString("missing_android_gradle_plugin"));
         }
 
+        logger.info("AndroidOpenCVGradlePlugin version " + BuildConfig.APP_VERSION);
         logger.info("Found android gradle plugin");
 
         // Add the extension to the project and wait for afterEvaluate is called when configuration
@@ -64,7 +65,7 @@ public class AndroidOpenCVGradlePlugin implements Plugin<Project> {
             androidBuildScriptModifier.modifyAndroidBuildScript();
         } catch (Exception e) {
             throw new PluginException("Couldn't modify the android block to include Android OpenCV " +
-                    "libs" + ".\n" +
+                    "libs.\n" +
                     ExceptionUtils.getCauses(e, messages.getString("caused_by")), e);
         }
     }

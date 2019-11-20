@@ -2,6 +2,7 @@ plugins {
     id 'groovy'
     id 'java'
     id 'maven-publish'
+    id "com.github.gmazzo.buildconfig" version "1.6.1"
 }
 
 group 'com.ahasbini.tools'
@@ -40,11 +41,11 @@ task createClasspathManifest {
 sourceSets {
     //noinspection GroovyAssignabilityCheck
     main {
+        groovy {
+            srcDirs = [ srcDirs, sourceSets.main.java.srcDirs.flatten()]
+        }
         java {
             srcDirs = [] // don't compile Java code twice
-        }
-        groovy {
-            srcDirs = [ 'src/main/groovy', 'src/main/java' ]
         }
     }
 }
@@ -74,5 +75,24 @@ publishing {
     }
     repositories {
         mavenLocal()
+    }
+}
+
+buildConfig {
+    packageName group + ".androidopencv"
+
+    buildConfigField("String", "APP_NAME", "\"AndroidOpenCVGradlePlugin\"")
+    buildConfigField("String", "APP_VERSION", "\"${project.version}\"")
+}
+
+task sourceSets {
+    doLast {
+        sourceSets.forEach() { SourceSet s ->
+            println "$s.name"
+            println "-------------------------"
+            println("java: " + s.java.sourceDirectories.files)
+            println("groovy: " + s.groovy.sourceDirectories.files)
+            println ""
+        }
     }
 }

@@ -30,50 +30,50 @@ For usage in an Android Project, the below changes are needed:
   project folder), modify the ```repositories``` and ```dependencies```
   block as below:
 
-```gradle
-buildscript {
-    repositories {
-        mavenLocal() // At the beginning of the block
-        // ... google() or jcenter() others
-        maven { // At the end of the block and after google()
-           url 'https://repo.gradle.org/gradle/libs-releases'
+    ```gradle
+    buildscript {
+        repositories {
+            mavenLocal() // At the beginning of the block
+            // ... google() or jcenter() others
+            maven { // At the end of the block and after google()
+               url 'https://repo.gradle.org/gradle/libs-releases'
+            }
+        }
+        dependencies {
+            // ... the Android plugin and other classpath definitions
+            classpath 'com.ahasbini.tools:android-opencv-gradle-plugin:0.0.+'
         }
     }
-    dependencies {
-        // ... the Android plugin and other classpath definitions
-        classpath 'com.ahasbini.tools:android-opencv-gradle-plugin:0.0.+'
-    }
-}
-```
+    ```
 
 2. In the ```app``` module (or application/library module that you're
   developing) ```build.gradle``` file, add the
   ```android-opencv-gradle-plugin``` plugin and the ```androidOpenCV```
   as below:
 
-```gradle
-// apply plugin: 'com.android.application' or other Android plugin
-apply plugin: 'com.ahasbini.android-opencv-gradle-plugin' // After the Android plugin
-
-// ...
-
-android {
+    ```gradle
+    // apply plugin: 'com.android.application' or other Android plugin
+    apply plugin: 'com.ahasbini.android-opencv-gradle-plugin' // After the Android plugin
+    
     // ...
-}
-
-androidOpenCV { // After the android block
-
-    // Required: Version of OpenCV to be used in the project
-    version '3.3.0'
-
-    // Optional: Custom url for downloading the
-    // opencv-xxx-android-sdk.zip file located at
-    // https://sourceforge.net/projects/opencvlibrary/files/opencv-android
-    url 'https://sourceforge.net/projects/opencvlibrary/files/opencv-android/3.3.0/opencv-3.3.0-android-sdk.zip/download'
-}
-
-// ...
-```
+    
+    android {
+        // ...
+    }
+    
+    androidOpenCV { // After the android block
+    
+        // Required: Version of OpenCV to be used in the project
+        version '3.3.0'
+    
+        // Optional: Custom url for downloading the
+        // opencv-xxx-android-sdk.zip file located at
+        // https://sourceforge.net/projects/opencvlibrary/files/opencv-android
+        url 'https://sourceforge.net/projects/opencvlibrary/files/opencv-android/3.3.0/opencv-3.3.0-android-sdk.zip/download'
+    }
+    
+    // ...
+    ```
 
 3. __Optional__: If the project did not contain any C++ code (usually
    located in ```jni``` or ```cpp``` folders under
@@ -82,16 +82,16 @@ androidOpenCV { // After the android block
    * Add the below in ```app``` module (or application/library module
    that you're developing) ```build.gradle``` file:
 
-    ```gradle
-    android {
-        // ...
-        externalNativeBuild {
-            cmake {
-                path "CMakeLists.txt"
+        ```gradle
+        android {
+            // ...
+            externalNativeBuild {
+                cmake {
+                    path "CMakeLists.txt"
+                }
             }
         }
-    }
-    ```
+        ```
 
    * Create the ```CMakeLists.txt``` in ```app``` module (or
    application/library module that you're developing) directory and
@@ -103,6 +103,35 @@ androidOpenCV { // After the android block
    <img src="https://developer.android.com/studio/images/buttons/toolbar-sync-gradle.png" width="16px" height="16px"/>,
    refresh linked C++ projects (**Build > Refresh Linked C++
    Projects**) and compile to make sure the integration was successful.
+
+### Troubleshooting
+
+In most cases the plugin will print out clear error messages to what 
+might be wrong in the build. In case the error messages are cryptic or 
+unsure if the plugin is causing it or not, two parameters for the build 
+command could be leveraged for getting more info.
+
+ - `--debug` flag, this will output more logging (lots of them) from 
+ gradle and any plugin used with the build including logs from 
+ AndroidOpenCVGradlePlugin. Example:
+ 
+    ```shell
+    # Either (on Windows):
+    gradlew.bat --debug task
+    # or (on *nix):
+    ./gradlew --debug task
+    ```
+ 
+ - `-PENABLE_ANDROID_OPENCV_LOGS` project parameter flag, this is 
+ specific to the AndroidOpenCVGradlePlugin and it will print out its 
+ logs without enabling the logs for everything else in the build. Example:
+    
+    ```shell
+    # Either (on Windows):
+    gradlew.bat -PENABLE_ANDROID_OPENCV_LOGS task
+    # or (on *nix):
+    ./gradlew -PENABLE_ANDROID_OPENCV_LOGS task
+    ```
 
 ## Underlying Logic & Implementation
 
