@@ -4,10 +4,15 @@ import com.ahasbini.tools.androidopencv.util.Logger;
 
 import org.gradle.api.Project;
 
+import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.FileVisitResult;
@@ -16,6 +21,10 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -122,5 +131,100 @@ public class FilesManager {
                 recursiveCopy(file, new File(directory, file.getName()), null);
             }
         }
+    }
+
+    public Map<String, String> writeAndGetMd5Sums(File md5File, File path,
+                                                  boolean performIntegrityCheck,
+                                                  FilenameFilter filenameFilter)
+            throws IOException, NoSuchAlgorithmException, ClassNotFoundException {
+        LinkedHashMap<String, String> fileMd5SumLinkedHashMap = new LinkedHashMap<>();
+        MessageDigest md = MessageDigest.getInstance("MD5");
+
+        SimpleFileVisitor<Path> fileSimpleFileVisitor = new SimpleFileVisitor<Path>() {
+
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                    throws IOException {
+                if (filenameFilter == null ||
+                        filenameFilter.accept(file.toFile().getParentFile(),
+                                file.toFile().getName())) {
+                    String checksum = checksum(file.toFile(), md);
+                    fileMd5SumLinkedHashMap.put(path.toPath().relativize(file).toString(),
+                            checksum);
+                }
+                return super.visitFile(file, attrs);
+            }
+        };
+
+        if (md5File.exists()) {
+            try (FileInputStream fileInputStream = new FileInputStream(md5File)) {
+                try (ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream)) {
+                    //noinspection unchecked
+                    LinkedHashMap<String, String> tempLinkedHashMap =
+                            (LinkedHashMap<String, String>) objectInputStream.readObject();
+                    fileMd5SumLinkedHashMap.putAll(tempLinkedHashMap);
+                }
+            } catch (EOFException e) {
+                // md5 file is corrupted or empty
+                Files.walkFileTree(path.toPath(), fileSimpleFileVisitor);
+
+                //noinspection ResultOfMethodCallIgnored
+                md5File.delete();
+            }
+        } else {
+            Files.walkFileTree(path.toPath(), fileSimpleFileVisitor);
+        }
+
+        if (md5File.exists() && performIntegrityCheck) {
+            LinkedHashMap<String, String> pathMd5SumLinkedHashMap = new LinkedHashMap<>();
+
+            Files.walkFileTree(path.toPath(), new SimpleFileVisitor<Path>() {
+
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                        throws IOException {
+                    if (filenameFilter == null ||
+                            filenameFilter.accept(file.toFile().getParentFile(),
+                            file.toFile().getName())) {
+                        String checksum = checksum(file.toFile(), md);
+                        pathMd5SumLinkedHashMap.put(path.toPath().relativize(file).toString(),
+                                checksum);
+                    }
+                    return super.visitFile(file, attrs);
+                }
+            });
+
+            if (!pathMd5SumLinkedHashMap.equals(fileMd5SumLinkedHashMap)) {
+                return new LinkedHashMap<>();
+            }
+        }
+
+        if (!md5File.exists()) {
+            try (FileOutputStream fileOutputStream = new FileOutputStream(md5File)) {
+                try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream)) {
+                    objectOutputStream.writeObject(fileMd5SumLinkedHashMap);
+                }
+            }
+        }
+
+        return fileMd5SumLinkedHashMap;
+    }
+
+    private String checksum(File file, MessageDigest md) throws IOException {
+        // DigestInputStream is better, but you also can hash file like this.
+        try (InputStream fis = new FileInputStream(file)) {
+            byte[] buffer = new byte[1024];
+            int nread;
+            while ((nread = fis.read(buffer)) != -1) {
+                md.update(buffer, 0, nread);
+            }
+        }
+
+        // bytes to hex
+        StringBuilder result = new StringBuilder();
+        for (byte b : md.digest()) {
+            result.append(String.format("%02x", b));
+        }
+        return result.toString();
     }
 }

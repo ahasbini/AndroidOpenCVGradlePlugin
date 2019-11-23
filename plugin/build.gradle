@@ -60,9 +60,11 @@ dependencies {
 
     testImplementation gradleTestKit()
     testImplementation 'junit:junit:4.12'
+    testImplementation 'org.mockito:mockito-core:2.28.2'
 
     //noinspection GroovyAssignabilityCheck
     testRuntimeOnly files(createClasspathManifest)
+    testRuntimeOnly files("$buildDir/classes/groovy/main")
 }
 
 publishing {

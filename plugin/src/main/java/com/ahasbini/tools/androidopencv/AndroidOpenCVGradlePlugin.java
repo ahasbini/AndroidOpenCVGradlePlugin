@@ -1,10 +1,10 @@
 package com.ahasbini.tools.androidopencv;
 
-import com.ahasbini.tools.androidopencv.util.ExceptionUtils;
-import com.ahasbini.tools.androidopencv.util.Logger;
 import com.ahasbini.tools.androidopencv.service.AndroidBuildScriptModifier;
 import com.ahasbini.tools.androidopencv.service.DownloadManager;
 import com.ahasbini.tools.androidopencv.service.FilesManager;
+import com.ahasbini.tools.androidopencv.util.ExceptionUtils;
+import com.ahasbini.tools.androidopencv.util.Logger;
 
 import org.gradle.api.Action;
 import org.gradle.api.NonNullApi;
@@ -16,10 +16,13 @@ import org.gradle.tooling.GradleConnector;
 import org.gradle.tooling.ProjectConnection;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.ResourceBundle;
 
 /**
@@ -119,7 +122,7 @@ public class AndroidOpenCVGradlePlugin implements Plugin<Project> {
                     cacheFiles = versionCacheDir.listFiles();
 
                     if (cacheFiles == null || cacheFiles.length == 0) {
-                        throw new IllegalStateException("Download was completed but files were not " +
+                        throw new PluginException("Download was completed but files were not " +
                                 "found in destination path");
                     }
                 } catch (Exception e) {
@@ -161,7 +164,7 @@ public class AndroidOpenCVGradlePlugin implements Plugin<Project> {
 
                     if (androidOpenCVExtractedFiles == null ||
                             androidOpenCVExtractedFiles.length == 0) {
-                        throw new IllegalStateException("Extracting zip file completed but files " +
+                        throw new PluginException("Extracting zip file completed but files " +
                                 "were not found in destination path");
                     }
                 } catch (IOException e) {
@@ -177,8 +180,6 @@ public class AndroidOpenCVGradlePlugin implements Plugin<Project> {
                 logger.info("\t{}", androidOpenCVExtractedFile.getAbsolutePath());
             }
 
-            // TODO: 12-Oct-19 ahasbini: implement verification of files using SHA1/MD5
-
             // Create the project android opencv dir
             File androidOpenCVProjectBuildDir = new File(project.getBuildDir(),
                     "androidopencv");
@@ -187,6 +188,14 @@ public class AndroidOpenCVGradlePlugin implements Plugin<Project> {
                         androidOpenCVProjectBuildDir.getAbsolutePath()));
             }
 
+            FilenameFilter sdkNativeFilenameFilter = (dir, name) ->
+                    (name.equals("native") && dir.getPath().endsWith("sdk")) ||
+                            dir.getPath().matches(".*sdk" +
+                                    File.separator.replace("\\",
+                                            "\\\\") +
+                                    "native.*");
+
+            // Perform copying and/or verification
             File[] androidOpenCVProjectBuildFiles = androidOpenCVProjectBuildDir.listFiles();
             if (androidOpenCVProjectBuildFiles == null || androidOpenCVProjectBuildFiles.length == 0) {
                 // Copy the needed files into the project android opencv dir
@@ -197,30 +206,72 @@ public class AndroidOpenCVGradlePlugin implements Plugin<Project> {
                         filesManager.recursiveCopy(
                                 new File(androidOpenCVExtractedFiles[0], "sdk"),
                                 new File(androidOpenCVProjectBuildDir, "sdk"),
-                                (dir, name) -> (
-                                        name.equals("native") &&
-                                                dir.getPath().endsWith("sdk")
-                                ) || dir.getPath().matches(
-                                        ".*sdk" +
-                                                File.separator.replace("\\",
-                                                        "\\\\") +
-                                                "native.*"));
+                                sdkNativeFilenameFilter);
                         androidOpenCVProjectBuildFiles = androidOpenCVProjectBuildDir.listFiles();
 
                         if (androidOpenCVProjectBuildFiles == null ||
                                 androidOpenCVProjectBuildFiles.length == 0) {
-                            throw new IllegalStateException("Copying files completed but files " +
+                            throw new PluginException("Copying files completed but files " +
                                     "were not found in destination path");
                         }
-
                     } catch (IOException e) {
                         throw new PluginException("Unable to copy downloaded files to project " +
                                 "build directory.\n" +
                                 ExceptionUtils.getCauses(e, messages.getString("caused_by")), e);
                     }
+
+                    try {
+                        // Perform verification setup
+                        Map<String, String> sourceMd5Map = filesManager.writeAndGetMd5Sums(
+                                new File(versionCacheDir,
+                                        requestedVersion + ".md5map"),
+                                new File(androidOpenCVExtractedFiles[0], "sdk"),
+                                false, sdkNativeFilenameFilter);
+                        Map<String, String> destinationMd5Map = filesManager.writeAndGetMd5Sums(
+                                new File(androidOpenCVProjectBuildDir,
+                                        requestedVersion + ".md5map"),
+                                new File(androidOpenCVProjectBuildDir, "sdk"),
+                                false, sdkNativeFilenameFilter);
+
+                        if (!sourceMd5Map.equals(destinationMd5Map)) {
+                            throw new PluginException("Failed to setup MD5 for verification");
+                        }
+                    } catch (IOException | NoSuchAlgorithmException | ClassNotFoundException e) {
+                        throw new PluginException("Unable to perform MD5 verification.\n" +
+                                ExceptionUtils.getCauses(e, messages.getString("caused_by")), e);
+                    }
                 } else {
                     // TODO: 14-Oct-19 ahasbini: externalize message
                     throw new PluginException("Failed to find the files needed for copying");
+                }
+            } else {
+                if (androidOpenCVExtractedFiles.length == 1 &&
+                        androidOpenCVExtractedFiles[0].getName().endsWith("OpenCV-android-sdk") &&
+                        androidOpenCVExtractedFiles[0].isDirectory()) {
+                    try {
+                        // Perform verification
+                        Map<String, String> sourceMd5Map = filesManager.writeAndGetMd5Sums(
+                                new File(versionCacheDir,
+                                        requestedVersion + ".md5map"),
+                                new File(androidOpenCVExtractedFiles[0], "sdk"),
+                                true, sdkNativeFilenameFilter);
+                        Map<String, String> destinationMd5Map = filesManager.writeAndGetMd5Sums(
+                                new File(androidOpenCVProjectBuildDir,
+                                        requestedVersion + ".md5map"),
+                                new File(androidOpenCVProjectBuildDir, "sdk"),
+                                true, sdkNativeFilenameFilter);
+
+                        if (!sourceMd5Map.equals(destinationMd5Map)) {
+                            // TODO: 23-Nov-19 ahasbini: need clean task in this scenario
+                            throw new PluginException("MD5 verification failed, destination may be corrupted");
+                        }
+                    } catch (IOException | NoSuchAlgorithmException | ClassNotFoundException e) {
+                        throw new PluginException("Unable to perform md5 verification.\n" +
+                                ExceptionUtils.getCauses(e, messages.getString("caused_by")), e);
+                    }
+                } else {
+                    // TODO: 14-Oct-19 ahasbini: externalize message
+                    throw new PluginException("Failed to find the files needed for verification");
                 }
             }
 
@@ -305,7 +356,7 @@ public class AndroidOpenCVGradlePlugin implements Plugin<Project> {
 
                     if (androidOpenCVBuildCacheFiles == null ||
                             androidOpenCVBuildCacheFiles.length == 0) {
-                        throw new IllegalStateException("Binaries wer compiled but " +
+                        throw new PluginException("Binaries wer compiled but " +
                                 "files were not found in destination path");
                     }
                 } catch (Exception e) {
