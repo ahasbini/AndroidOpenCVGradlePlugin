@@ -154,8 +154,9 @@ which can be found mostly in
  ```"https://sourceforge.net/projects/opencvlibrary/files/" + version + "/opencv-" + version + "-android-sdk.zip"```
  or the value of ```url``` in ```androidOpenCV``` block.
  - Check if existing or extract the downloaded zip file.
- - Check if existing or copy the JNI directories (path used in the
- first step) into ```{project_module_directory}/build/androidopencv```.
+ - Check if existing and verified (using md5 sums), or copy the JNI 
+ directories (path used in the first step) into 
+ ```{project_module_directory}/build/androidopencv```.
  - Compile AAR binaries from Java source and place outputs (debug and
  release builds) in
  ```{user_home}/.androidopencv/{version}/build-cache``` using the
