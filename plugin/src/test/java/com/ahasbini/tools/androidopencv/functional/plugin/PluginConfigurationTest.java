@@ -165,4 +165,32 @@ public class PluginConfigurationTest extends BaseFunctionalTest {
         // TODO: 02-Nov-19 ahasbini: assert that native libs have been coped in project dir
         // TODO: 02-Nov-19 ahasbini: assert that project has compiled successfully and generated outputs
     }
+
+    @Test
+    public void testSuccessfulConsecutiveBuilds() throws IOException, URISyntaxException {
+
+        // SETUP
+        writeFolderContentsFromClasspath("/PluginTest_testSuccessfulConsecutiveBuilds",
+                getTestProjectDir().getRoot());
+        injectBuildScriptClassPath(new File(getTestProjectDir().getRoot(), "build.gradle"),
+                getPluginClassPath());
+
+        BuildResult result = getGradleRunnerBuilder()
+                .withProjectDir(testProjectDir.getRoot())
+                .withArguments("-PENABLE_ANDROID_OPENCV_LOGS", ":assembleDebug")
+                .withGradleVersion("5.2.1")
+                .build();
+
+        result = getGradleRunnerBuilder()
+                .withProjectDir(testProjectDir.getRoot())
+                .withArguments("-PENABLE_ANDROID_OPENCV_LOGS", ":assembleDebug")
+                .withGradleVersion("5.2.1")
+                .build();
+
+        // TODO: 13-Oct-19 ahasbini: assert
+        // TODO: 02-Nov-19 ahasbini: assert that java sources have been compiled
+        // TODO: 02-Nov-19 ahasbini: assert that opencv has been downloaded and extracted
+        // TODO: 02-Nov-19 ahasbini: assert that native libs have been coped in project dir
+        // TODO: 02-Nov-19 ahasbini: assert that project has compiled successfully and generated outputs
+    }
 }

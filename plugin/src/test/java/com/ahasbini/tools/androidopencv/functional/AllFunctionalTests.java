@@ -1,5 +1,6 @@
 package com.ahasbini.tools.androidopencv.functional;
 
+import com.ahasbini.tools.androidopencv.functional.android.AndroidPluginTest;
 import com.ahasbini.tools.androidopencv.functional.gradle.AllGradleTests;
 import com.ahasbini.tools.androidopencv.functional.plugin.AllPluginTests;
 
@@ -12,6 +13,7 @@ import org.junit.runners.Suite;
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
         AllGradleTests.class,
+        AndroidPluginTest.class,
         AllPluginTests.class
 })
 public class AllFunctionalTests  {
