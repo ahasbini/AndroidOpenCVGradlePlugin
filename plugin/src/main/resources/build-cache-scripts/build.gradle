@@ -81,7 +81,7 @@ task compileOpenCVDebug(type: Copy) {
         include '*-debug.aar'
     }
     into new File(project.getProjectDir(), 'outputs')
-    rename '(.+)-debug\\.aar', "\$1-debug-${opencv_version_name}\\.aar"
+    rename '.+-debug\\.aar', "${opencv_aar_name_prefix}-debug-${opencv_version_name}\\.aar"
 }
 
 task compileOpenCVRelease(type: Copy) {
@@ -90,7 +90,7 @@ task compileOpenCVRelease(type: Copy) {
         include '*-release.aar'
     }
     into new File(project.getProjectDir(), 'outputs')
-    rename '(.+)-release\\.aar', "\$1-release-${opencv_version_name}\\.aar"
+    rename '.+-release\\.aar', "${opencv_aar_name_prefix}-release-${opencv_version_name}\\.aar"
 }
 
 task compileOpenCV {

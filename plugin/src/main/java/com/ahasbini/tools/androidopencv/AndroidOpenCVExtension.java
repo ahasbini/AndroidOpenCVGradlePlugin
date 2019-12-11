@@ -6,8 +6,8 @@ package com.ahasbini.tools.androidopencv;
 public class AndroidOpenCVExtension {
 
 
-    private String version = null;
-    private String url = null;
+    private String version = "";
+    private String url = "";
 
     public String getVersion() {
         return version;

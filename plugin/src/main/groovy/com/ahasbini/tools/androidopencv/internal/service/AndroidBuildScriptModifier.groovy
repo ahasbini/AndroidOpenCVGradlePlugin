@@ -1,6 +1,6 @@
-package com.ahasbini.tools.androidopencv.service
+package com.ahasbini.tools.androidopencv.internal.service
 
-import com.ahasbini.tools.androidopencv.util.Logger
+import com.ahasbini.tools.androidopencv.internal.util.Logger
 import org.gradle.api.Project
 /**
  * Created by ahasbini on 12-Oct-19.

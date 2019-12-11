@@ -83,10 +83,9 @@ public class SimpleGradleTest extends BaseFunctionalTest {
                 .withArguments(":dependencies")
                 .build();
 
-
-        Assert.assertTrue(result.getOutput().matches(buildOutputRegex(
+        Assert.assertTrue(result.getOutput().matches(buildOutputRegex("" +
                 "implementation - Implementation only dependencies for source set 'main'. (n)\r\n" +
-                        "\\--- junit:junit:4.12 (n)")));
+                "\\--- junit:junit:4.12 (n)")));
         //noinspection ConstantConditions
         Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":dependencies").getOutcome());
     }
@@ -107,9 +106,9 @@ public class SimpleGradleTest extends BaseFunctionalTest {
                 .build();
 
 
-        Assert.assertTrue(result.getOutput().matches(buildOutputRegex(
+        Assert.assertTrue(result.getOutput().matches(buildOutputRegex("" +
                 "implementation - Implementation only dependencies for source set 'main'. (n)\r\n" +
-                        "\\--- non-existing-jar-0.0.1 (n)")));
+                "\\--- non-existing-jar-0.0.1 (n)")));
         //noinspection ConstantConditions
         Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":dependencies").getOutcome());
     }

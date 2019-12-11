@@ -1,28 +1,25 @@
 package com.ahasbini.tools.androidopencv;
 
-import com.ahasbini.tools.androidopencv.service.AndroidBuildScriptModifier;
-import com.ahasbini.tools.androidopencv.service.DownloadManager;
-import com.ahasbini.tools.androidopencv.service.FilesManager;
-import com.ahasbini.tools.androidopencv.util.ExceptionUtils;
-import com.ahasbini.tools.androidopencv.util.Logger;
+import com.ahasbini.tools.androidopencv.internal.service.AndroidBuildScriptModifier;
+import com.ahasbini.tools.androidopencv.internal.util.ExceptionUtils;
+import com.ahasbini.tools.androidopencv.internal.util.Logger;
+import com.ahasbini.tools.androidopencv.task.BuildAndroidOpenCVAarsTask;
+import com.ahasbini.tools.androidopencv.task.CleanAndroidOpenCVBuildCacheTask;
+import com.ahasbini.tools.androidopencv.task.CleanAndroidOpenCVBuildFolderTask;
+import com.ahasbini.tools.androidopencv.task.CopyAndroidOpenCVJniLibsTask;
+import com.ahasbini.tools.androidopencv.task.DownloadAndroidOpenCVTask;
+import com.ahasbini.tools.androidopencv.task.SetupAndroidOpenCVTask;
+import com.ahasbini.tools.androidopencv.task.UnZipAndroidOpenCVTask;
 
 import org.gradle.api.Action;
 import org.gradle.api.NonNullApi;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.plugins.PluginManager;
-import org.gradle.tooling.BuildLauncher;
-import org.gradle.tooling.GradleConnector;
-import org.gradle.tooling.ProjectConnection;
+import org.gradle.api.tasks.TaskContainer;
 
 import java.io.File;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.StandardOpenOption;
-import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Map;
 import java.util.ResourceBundle;
 
 /**
@@ -61,6 +58,51 @@ public class AndroidOpenCVGradlePlugin implements Plugin<Project> {
         project.getExtensions().create("androidOpenCV", AndroidOpenCVExtension.class);
         project.afterEvaluate(new AfterEvaluateAction());
 
+        // Add custom tasks
+        TaskContainer tasks = project.getTasks();
+
+        //noinspection unused
+        CleanAndroidOpenCVBuildCacheTask cleanAndroidOpenCVBuildCacheTask =
+                tasks.create("cleanAndroidOpenCVBuildCache",
+                        CleanAndroidOpenCVBuildCacheTask.class);
+
+        CleanAndroidOpenCVBuildFolderTask cleanAndroidOpenCVBuildFolderTask =
+                tasks.create("cleanAndroidOpenCVBuildFolder",
+                        CleanAndroidOpenCVBuildFolderTask.class);
+        Task cleanTask = tasks.findByName("clean");
+        if (cleanTask != null) {
+            cleanTask.dependsOn(cleanAndroidOpenCVBuildFolderTask);
+        } else {
+            throw new PluginException("Could not find clean task in project build");
+        }
+
+        DownloadAndroidOpenCVTask downloadAndroidOpenCVTask =
+                tasks.create("downloadAndroidOpenCV", DownloadAndroidOpenCVTask.class);
+
+        UnZipAndroidOpenCVTask unZipAndroidOpenCVTask =
+                tasks.create("unZipAndroidOpenCV", UnZipAndroidOpenCVTask.class);
+        unZipAndroidOpenCVTask.dependsOn(downloadAndroidOpenCVTask);
+
+        CopyAndroidOpenCVJniLibsTask copyAndroidOpenCVJniLibsTask =
+                tasks.create("copyAndroidOpenCVJniLibs", CopyAndroidOpenCVJniLibsTask.class);
+        copyAndroidOpenCVJniLibsTask.dependsOn(unZipAndroidOpenCVTask);
+
+        BuildAndroidOpenCVAarsTask buildAndroidOpenCVAarsTask =
+                tasks.create("buildAndroidOpenCVAars", BuildAndroidOpenCVAarsTask.class);
+        buildAndroidOpenCVAarsTask.dependsOn(copyAndroidOpenCVJniLibsTask);
+
+        SetupAndroidOpenCVTask setupAndroidOpenCVTask =
+                tasks.create("setupAndroidOpenCV", SetupAndroidOpenCVTask.class);
+        setupAndroidOpenCVTask.dependsOn(downloadAndroidOpenCVTask, unZipAndroidOpenCVTask,
+                copyAndroidOpenCVJniLibsTask, buildAndroidOpenCVAarsTask);
+
+        Task preBuildTask = tasks.findByName("preBuild");
+        if (preBuildTask != null) {
+            preBuildTask.dependsOn(setupAndroidOpenCVTask);
+        } else {
+            throw new PluginException("Could not find preBuild task in project build");
+        }
+
         // Modify the android configs for them to be picked up before being evaluated by the plugin
         AndroidBuildScriptModifier androidBuildScriptModifier =
                 new AndroidBuildScriptModifier(project);
@@ -91,12 +133,29 @@ public class AndroidOpenCVGradlePlugin implements Plugin<Project> {
             String requestedVersion = androidOpenCVExtension.getVersion();
             logger.info("Requested OpenCV version: {}", requestedVersion);
 
-            FilesManager filesManager = new FilesManager(project);
-            DownloadManager downloadManager = new DownloadManager(project);
+            /*FilesManager filesManager = new FilesManager(project);
+            DownloadManager downloadManager = new DownloadManager(project);*/
             AndroidBuildScriptModifier androidBuildScriptModifier =
                     new AndroidBuildScriptModifier(project);
 
-            // TODO: 26-Nov-19 ahasbini: START download
+            File androidOpenCVCacheDir = new File(System.getProperty("user.home"),
+                    ".androidopencv");
+
+            File versionCacheDir = new File(androidOpenCVCacheDir, requestedVersion);
+
+            File androidOpenCVBuildCacheDir = new File(versionCacheDir, "build-cache");
+
+            File androidOpenCVBuildCacheOutputsDir = new File(androidOpenCVBuildCacheDir,
+                    "outputs");
+
+            File[] androidOpenCVBuildCacheFiles = new File[]{
+                    new File(androidOpenCVBuildCacheOutputsDir, "" +
+                            Constants.OPENCV_AAR_NAME_PREFIX + "-debug-" + requestedVersion + ".aar"),
+                    new File(androidOpenCVBuildCacheOutputsDir, "" +
+                            Constants.OPENCV_AAR_NAME_PREFIX + "-release-" + requestedVersion + ".aar")
+            };
+
+            /*// TODO: 26-Nov-19 ahasbini: START download
             // Check the user profile android opencv cache for existing version or perform download
             // TODO: 14-Oct-19 ahasbini: create a test with different user home location
             File androidOpenCVCacheDir = new File(System.getProperty("user.home"),
@@ -137,9 +196,9 @@ public class AndroidOpenCVGradlePlugin implements Plugin<Project> {
             for (File cacheFile : cacheFiles) {
                 logger.info("\t{}", cacheFile.getAbsolutePath());
             }
-            // TODO: 26-Nov-19 ahasbini: FINISH download
+            // TODO: 26-Nov-19 ahasbini: FINISH download*/
 
-            // TODO: 26-Nov-19 ahasbini: START unzip
+            /*// TODO: 26-Nov-19 ahasbini: START unzip
             File[] zips = versionCacheDir.listFiles(
                     (dir, name) -> name.endsWith("zip"));
 
@@ -182,9 +241,9 @@ public class AndroidOpenCVGradlePlugin implements Plugin<Project> {
             for (File androidOpenCVExtractedFile : androidOpenCVExtractedFiles) {
                 logger.info("\t{}", androidOpenCVExtractedFile.getAbsolutePath());
             }
-            // TODO: 26-Nov-19 ahasbini: FINISH unzip
+            // TODO: 26-Nov-19 ahasbini: FINISH unzip*/
 
-            // TODO: 26-Nov-19 ahasbini: START copy JNI libs
+            /*// TODO: 26-Nov-19 ahasbini: START copy JNI libs
             // Create the project android opencv dir
             File androidOpenCVProjectBuildDir = new File(project.getBuildDir(),
                     "androidopencv");
@@ -284,9 +343,9 @@ public class AndroidOpenCVGradlePlugin implements Plugin<Project> {
             for (File androidOpenCVBuildFile : androidOpenCVProjectBuildFiles) {
                 logger.info("\t{}", androidOpenCVBuildFile.getAbsolutePath());
             }
-            // TODO: 26-Nov-19 ahasbini: FINISH copy JNI libs
+            // TODO: 26-Nov-19 ahasbini: FINISH copy JNI libs*/
 
-            // TODO: 26-Nov-19 ahasbini: START build aars
+            /*// TODO: 26-Nov-19 ahasbini: START build aars
             // Build AAR binaries in user cache dir using Gradle Tooling API
             File androidOpenCVBuildCacheDir = new File(versionCacheDir, "build-cache");
             if (!filesManager.checkOrCreateDirectory(androidOpenCVBuildCacheDir)) {
@@ -371,7 +430,7 @@ public class AndroidOpenCVGradlePlugin implements Plugin<Project> {
                             ExceptionUtils.getCauses(e, messages.getString("caused_by")), e);
                 }
             }
-            // TODO: 26-Nov-19 ahasbini: FINISH build aars
+            // TODO: 26-Nov-19 ahasbini: FINISH build aars*/
 
             // Add built AARs to project dependencies
             try {
@@ -389,7 +448,7 @@ public class AndroidOpenCVGradlePlugin implements Plugin<Project> {
                                             ":" + requestedVersion + "@"));
                 }
             } catch (Exception e) {
-                throw new PluginException("Unable to copy compiled binaries.\n" +
+                throw new PluginException("Unable to add project dependencies.\n" +
                         ExceptionUtils.getCauses(e, messages.getString("caused_by")), e);
             }
 

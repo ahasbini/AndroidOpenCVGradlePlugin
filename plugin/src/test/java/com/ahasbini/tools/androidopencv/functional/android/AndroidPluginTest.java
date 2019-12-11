@@ -10,6 +10,9 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
+/**
+ * Created by ahasbini on 26-Nov-19.
+ */
 public class AndroidPluginTest extends BaseFunctionalTest {
 
     @Test

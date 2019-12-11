@@ -1,6 +1,6 @@
 package com.ahasbini.tools.androidopencv.unit.plugin;
 
-import com.ahasbini.tools.androidopencv.service.FilesManager;
+import com.ahasbini.tools.androidopencv.internal.service.FilesManager;
 import com.ahasbini.tools.androidopencv.unit.BaseUnitTest;
 
 import org.gradle.api.Project;
@@ -16,6 +16,9 @@ import java.security.NoSuchAlgorithmException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+/**
+ * Created by ahasbini on 23-Nov-19.
+ */
 public class FilesManagerTest extends BaseUnitTest {
 
     @Rule

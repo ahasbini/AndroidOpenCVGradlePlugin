@@ -1,6 +1,6 @@
-package com.ahasbini.tools.androidopencv.service;
+package com.ahasbini.tools.androidopencv.internal.service;
 
-import com.ahasbini.tools.androidopencv.util.Logger;
+import com.ahasbini.tools.androidopencv.internal.util.Logger;
 
 import org.gradle.api.Project;
 
@@ -36,6 +36,7 @@ public class FilesManager {
 
     private final Logger logger = Logger.getLogger(FilesManager.class);
 
+    @SuppressWarnings({"FieldCanBeLocal", "unused"})
     private Project project;
 
     public FilesManager(Project project) {
@@ -47,8 +48,6 @@ public class FilesManager {
         ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream(zipFile));
         ZipEntry zipEntry = zipInputStream.getNextEntry();
         unzipRecursively(zipInputStream, zipEntry, targetDir);
-        zipInputStream = new ZipInputStream(new FileInputStream(zipFile));
-        zipEntry = zipInputStream.getNextEntry();
     }
 
     private void unzipRecursively(ZipInputStream zipInputStream, ZipEntry zipEntry, File target)
@@ -78,30 +77,15 @@ public class FilesManager {
         return (directory.exists() && directory.isDirectory()) || directory.mkdirs();
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
+    public boolean checkDirectory(File directory) {
+        return directory.exists() && directory.isDirectory();
+    }
+
     public void recursiveCopy(File src, File dst, FilenameFilter filter) throws IOException {
         if (src.isDirectory()) {
             if (dst.exists()) {
-                Files.walkFileTree(dst.toPath(), new SimpleFileVisitor<Path>() {
-
-                    @Override
-                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-                            throws IOException {
-                        if (new File(file.toUri()).delete()) {
-                            return super.visitFile(file, attrs);
-                        } else {
-                            throw new IOException("Couldn't delete file: " + file.toString());
-                        }
-                    }
-
-                    @Override
-                    public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-                        if (new File(dir.toUri()).delete()) {
-                            return super.postVisitDirectory(dir, exc);
-                        } else {
-                            throw new IOException("Couldn't delete directory: " + dir.toString());
-                        }
-                    }
-                });
+                recursiveDelete(dst);
             }
             //noinspection ResultOfMethodCallIgnored
             dst.delete();
@@ -117,6 +101,35 @@ public class FilesManager {
         }
     }
 
+    public void recursiveDelete(File path) throws IOException {
+        Files.walkFileTree(path.toPath(), new SimpleFileVisitor<Path>() {
+
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                    throws IOException {
+                if (new File(file.toUri()).delete()) {
+                    return super.visitFile(file, attrs);
+                } else {
+                    throw new IOException("Couldn't delete file: " + file.toString());
+                }
+            }
+
+            @Override
+            public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                if (new File(dir.toUri()).delete()) {
+                    return super.postVisitDirectory(dir, exc);
+                } else {
+                    throw new IOException("Couldn't delete directory: " + dir.toString());
+                }
+            }
+        });
+    }
+
+    public boolean checkFile(File file) {
+        return file.exists() && file.isFile();
+    }
+
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean checkOrCreateFile(File file) throws IOException {
         return (file.exists() && !file.isDirectory()) || file.createNewFile();
     }

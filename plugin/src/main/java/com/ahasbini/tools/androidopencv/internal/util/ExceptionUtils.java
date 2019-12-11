@@ -1,4 +1,4 @@
-package com.ahasbini.tools.androidopencv.util;
+package com.ahasbini.tools.androidopencv.internal.util;
 
 /**
  * Created by ahasbini on 02-Nov-19.

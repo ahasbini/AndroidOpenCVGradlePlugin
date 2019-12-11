@@ -3,6 +3,7 @@ package com.ahasbini.tools.androidopencv.functional.plugin;
 import com.ahasbini.tools.androidopencv.functional.BaseFunctionalTest;
 
 import org.gradle.testkit.runner.BuildResult;
+import org.gradle.testkit.runner.TaskOutcome;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -137,7 +138,7 @@ public class PluginConfigurationTest extends BaseFunctionalTest {
 
         BuildResult result = getGradleRunnerBuilder()
                 .withProjectDir(testProjectDir.getRoot())
-                .withArguments("-PENABLE_ANDROID_OPENCV_LOGS", "-m", ":assemble")
+                .withArguments("--stacktrace", "-PENABLE_ANDROID_OPENCV_LOGS", "-m", ":assemble")
                 .withGradleVersion("4.1")
                 .build();
 
@@ -164,6 +165,70 @@ public class PluginConfigurationTest extends BaseFunctionalTest {
         // TODO: 02-Nov-19 ahasbini: assert that opencv has been downloaded and extracted
         // TODO: 02-Nov-19 ahasbini: assert that native libs have been coped in project dir
         // TODO: 02-Nov-19 ahasbini: assert that project has compiled successfully and generated outputs
+    }
+
+    @Test
+    public void testTasksOutcome() throws IOException, URISyntaxException {
+
+        // SETUP
+        writeFolderContentsFromClasspath("/PluginTest_testTasksOutcome",
+                getTestProjectDir().getRoot());
+        injectBuildScriptClassPath(new File(getTestProjectDir().getRoot(), "build.gradle"),
+                getPluginClassPath());
+
+        BuildResult result = getGradleRunnerBuilder()
+                .withProjectDir(testProjectDir.getRoot())
+                .withArguments("-PENABLE_ANDROID_OPENCV_LOGS", ":tasks")
+                .withGradleVersion("5.2.1")
+                .build();
+
+        Assert.assertTrue(result.getOutput().matches(buildOutputRegex("" +
+                "AndroidOpenCV tasks\r\n" +
+                "-------------------\r\n" +
+                "cleanAndroidOpenCVBuildCache - Cleans AndroidOpenCV build-cache folder in user home directory.\r\n" +
+                "cleanAndroidOpenCVBuildFolder - Cleans AndroidOpenCV folder in project build directory.\r\n" +
+                "setupAndroidOpenCV - Configures and installs AndroidOpenCV dependencies for project.")));
+        //noinspection ConstantConditions
+        Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":tasks").getOutcome());
+    }
+
+    @Test
+    public void testCleanAndroidOpenCVBuildCacheTaskHelpOutcome()
+            throws IOException, URISyntaxException {
+
+        // SETUP
+        writeFolderContentsFromClasspath("/PluginTest_testCleanAndroidOpenCVBuildCacheTaskHelpOutcome",
+                getTestProjectDir().getRoot());
+        injectBuildScriptClassPath(new File(getTestProjectDir().getRoot(), "build.gradle"),
+                getPluginClassPath());
+
+        BuildResult result = getGradleRunnerBuilder()
+                .withProjectDir(testProjectDir.getRoot())
+                .withArguments("-PENABLE_ANDROID_OPENCV_LOGS", ":help", "--task", "cleanAndroidOpenCVBuildCache")
+                .withGradleVersion("5.2.1")
+                .build();
+
+        Assert.assertTrue(result.getOutput().matches(buildOutputRegex("" +
+                "Detailed task information for cleanAndroidOpenCVBuildCache\r\n" +
+                "\r\n" +
+                "Path\r\n" +
+                "     :cleanAndroidOpenCVBuildCache\r\n" +
+                "\r\n" +
+                "Type\r\n" +
+                "     CleanAndroidOpenCVBuildCacheTask (com.ahasbini.tools.androidopencv.task.CleanAndroidOpenCVBuildCacheTask)\r\n" +
+                "\r\n" +
+                "Options\r\n" +
+                "     --all     Cleans all versions\r\n" +
+                "\r\n" +
+                "     --version     Cleans the specified version instead of the version defined in build.gradle androidOpenCV block\r\n" +
+                "\r\n" +
+                "Description\r\n" +
+                "     Cleans AndroidOpenCV build-cache folder in user home directory.\r\n" +
+                "\r\n" +
+                "Group\r\n" +
+                "     AndroidOpenCV")));
+        //noinspection ConstantConditions
+        Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":help").getOutcome());
     }
 
     @Test
