@@ -176,6 +176,6 @@ brief list of things (TODOs) that are in plan for the project:
 
  - [ ] Add Android NDK version checking and configuration for proper
  linking with compiled binaries of OpenCV
- - [ ] Add plugin ```clean``` task
+ - [x] Add plugin ```clean``` tasks
  - [ ] Add more tests and assertions in test cases
  - [ ] CI/CD integration
