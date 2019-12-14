@@ -16,6 +16,7 @@ public class Injector {
     private static Project project;
     private static DownloadManager downloadManager;
     private static FilesManager filesManager;
+    private static CacheManager cacheManager;
     private static AndroidBuildScriptModifier androidBuildScriptModifier;
     private static ResourceBundle messages;
 
@@ -23,6 +24,7 @@ public class Injector {
         project = null;
         downloadManager = null;
         filesManager = null;
+        cacheManager = null;
         androidBuildScriptModifier = null;
         messages = null;
     }
@@ -58,6 +60,22 @@ public class Injector {
             filesManager = new FilesManager(project);
         }
         return filesManager;
+    }
+
+    public static CacheManager getCacheManager(Project project) {
+        logger.debug("getCacheManager called");
+        logger.debug("project " + Integer.toHexString(project.hashCode()));
+
+        if (Injector.project != null && !project.equals(Injector.project)) {
+            logger.warn("received a different project! hash codes: " +
+                    Integer.toHexString(project.hashCode()) + " != " +
+                    Integer.toHexString(Injector.project.hashCode()));
+        }
+
+        if (cacheManager == null) {
+            cacheManager = new CacheManager(project);
+        }
+        return cacheManager;
     }
 
     public static AndroidBuildScriptModifier getAndroidBuildScriptModifier(Project project) {
