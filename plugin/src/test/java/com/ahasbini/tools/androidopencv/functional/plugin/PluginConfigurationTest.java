@@ -5,6 +5,7 @@ import com.ahasbini.tools.androidopencv.functional.BaseFunctionalTest;
 import org.gradle.testkit.runner.BuildResult;
 import org.gradle.testkit.runner.TaskOutcome;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -126,6 +127,7 @@ public class PluginConfigurationTest extends BaseFunctionalTest {
         // TODO: 13-Oct-19 ahasbini: assert
     }
 
+    @Ignore("Deprecated logic")
     @Test
     public void testSuccessfulBuildWithCustomUrlWithDryRun() throws IOException, URISyntaxException {
 
@@ -251,6 +253,54 @@ public class PluginConfigurationTest extends BaseFunctionalTest {
                 .withArguments("-PENABLE_ANDROID_OPENCV_LOGS", ":assembleDebug")
                 .withGradleVersion("5.2.1")
                 .build();
+
+        // TODO: 13-Oct-19 ahasbini: assert
+        // TODO: 02-Nov-19 ahasbini: assert that java sources have been compiled
+        // TODO: 02-Nov-19 ahasbini: assert that opencv has been downloaded and extracted
+        // TODO: 02-Nov-19 ahasbini: assert that native libs have been coped in project dir
+        // TODO: 02-Nov-19 ahasbini: assert that project has compiled successfully and generated outputs
+    }
+
+    @Test
+    public void testDoubleProjectConsecutiveBuilds() throws IOException, URISyntaxException {
+
+        // SETUP
+        writeFolderContentsFromClasspath("/PluginTest_testDoubleProjectConsecutiveBuilds",
+                getTestProjectDir().getRoot());
+        injectBuildScriptClassPath(new File(new File(testProjectDir.getRoot(), "project1"),
+                        "build.gradle"), getPluginClassPath());
+        injectBuildScriptClassPath(new File(new File(testProjectDir.getRoot(), "project2"),
+                        "build.gradle"), getPluginClassPath());
+
+        getGradleRunnerBuilder()
+                .withProjectDir(new File(testProjectDir.getRoot(), "project1"))
+                .withArguments("-PENABLE_ANDROID_OPENCV_LOGS", ":assembleDebug")
+                .withGradleVersion("5.2.1")
+                .build();
+
+        getGradleRunnerBuilder()
+                .withProjectDir(new File(testProjectDir.getRoot(), "project2"))
+                .withArguments("-PENABLE_ANDROID_OPENCV_LOGS", ":assembleDebug")
+                .withGradleVersion("5.2.1")
+                .build();
+
+        BuildResult result = getGradleRunnerBuilder()
+                .withProjectDir(new File(testProjectDir.getRoot(), "project1"))
+                .withArguments("-PENABLE_ANDROID_OPENCV_LOGS", ":assembleDebug")
+                .withGradleVersion("5.2.1")
+                .build();
+
+        //noinspection ConstantConditions
+        Assert.assertEquals(result.task(":setupAndroidOpenCV").getOutcome(), TaskOutcome.UP_TO_DATE);
+
+        result = getGradleRunnerBuilder()
+                .withProjectDir(new File(testProjectDir.getRoot(), "project2"))
+                .withArguments("-PENABLE_ANDROID_OPENCV_LOGS", ":assembleDebug")
+                .withGradleVersion("5.2.1")
+                .build();
+
+        //noinspection ConstantConditions
+        Assert.assertEquals(result.task(":setupAndroidOpenCV").getOutcome(), TaskOutcome.UP_TO_DATE);
 
         // TODO: 13-Oct-19 ahasbini: assert
         // TODO: 02-Nov-19 ahasbini: assert that java sources have been compiled

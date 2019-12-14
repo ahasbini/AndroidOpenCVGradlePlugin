@@ -4,14 +4,14 @@ import com.ahasbini.tools.androidopencv.AndroidOpenCVExtension;
 import com.ahasbini.tools.androidopencv.Constants;
 import com.ahasbini.tools.androidopencv.PluginException;
 import com.ahasbini.tools.androidopencv.internal.service.FilesManager;
+import com.ahasbini.tools.androidopencv.internal.service.Injector;
 import com.ahasbini.tools.androidopencv.internal.util.ExceptionUtils;
 import com.ahasbini.tools.androidopencv.internal.util.Logger;
 
 import org.gradle.api.DefaultTask;
 import org.gradle.api.NonNullApi;
-import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.tasks.CacheableTask;
-import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.OutputFiles;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.tooling.BuildLauncher;
@@ -34,10 +34,10 @@ import java.util.ResourceBundle;
 public class BuildAndroidOpenCVAarsTask extends DefaultTask {
 
     private final Logger logger = Logger.getLogger(BuildAndroidOpenCVAarsTask.class);
-    private final ResourceBundle messages = ResourceBundle.getBundle("messages");
+    private final ResourceBundle messages = Injector.getMessages();
 
-    @InputFiles
-    public ConfigurableFileTree getInputFiles() {
+    @InputDirectory
+    public File getInputFiles() {
         logger.debug("getInputFiles called");
 
         AndroidOpenCVExtension androidOpenCVExtension = getProject().getExtensions()
@@ -56,7 +56,7 @@ public class BuildAndroidOpenCVAarsTask extends DefaultTask {
         File androidOpenCVRootDir = new File(androidOpenCVExtractedZipDir,
                 Constants.EXTRACTED_OPENCV_ROOT_DIRECTORY_NAME);
 
-        return getProject().fileTree(new File(androidOpenCVRootDir, "sdk"));
+        return new File(androidOpenCVRootDir, "sdk");
     }
 
     @SuppressWarnings("unused")
@@ -90,7 +90,13 @@ public class BuildAndroidOpenCVAarsTask extends DefaultTask {
     public void buildAndroidOpenCVAars() {
         logger.debug("buildAndroidOpenCVAars called");
 
-        FilesManager filesManager = new FilesManager(getProject());
+        performBuildAndroidOpenCVAars();
+    }
+
+    private void performBuildAndroidOpenCVAars() {
+        logger.debug("performBuildAndroidOpenCVAars called");
+
+        FilesManager filesManager = Injector.getFilesManager(getProject());
         AndroidOpenCVExtension androidOpenCVExtension = getProject().getExtensions()
                 .getByType(AndroidOpenCVExtension.class);
         String requestedVersion = androidOpenCVExtension.getVersion();

@@ -1,6 +1,7 @@
 package com.ahasbini.tools.androidopencv.internal.service
 
 import com.ahasbini.tools.androidopencv.internal.util.Logger
+import groovy.transform.PackageScope
 import org.gradle.api.Project
 /**
  * Created by ahasbini on 12-Oct-19.
@@ -12,6 +13,7 @@ class AndroidBuildScriptModifier {
 
     private Project project
 
+    @PackageScope
     AndroidBuildScriptModifier(Project project) {
         this.project = project
     }

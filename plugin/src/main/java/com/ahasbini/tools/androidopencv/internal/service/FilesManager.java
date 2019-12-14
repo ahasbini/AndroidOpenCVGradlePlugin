@@ -4,6 +4,7 @@ import com.ahasbini.tools.androidopencv.internal.util.Logger;
 
 import org.gradle.api.Project;
 
+import java.io.BufferedInputStream;
 import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
@@ -25,6 +26,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.zip.CRC32;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -39,7 +41,7 @@ public class FilesManager {
     @SuppressWarnings({"FieldCanBeLocal", "unused"})
     private Project project;
 
-    public FilesManager(Project project) {
+    FilesManager(Project project) {
         this.project = project;
     }
 
@@ -125,11 +127,11 @@ public class FilesManager {
         });
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean checkFile(File file) {
         return file.exists() && file.isFile();
     }
 
-    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean checkOrCreateFile(File file) throws IOException {
         return (file.exists() && !file.isDirectory()) || file.createNewFile();
     }
@@ -161,7 +163,7 @@ public class FilesManager {
                 if (filenameFilter == null ||
                         filenameFilter.accept(file.toFile().getParentFile(),
                                 file.toFile().getName())) {
-                    String checksum = checksum(file.toFile(), md);
+                    String checksum = computeHash(file.toFile(), md);
                     fileMd5SumLinkedHashMap.put(path.toPath().relativize(file).toString(),
                             checksum);
                 }
@@ -199,7 +201,7 @@ public class FilesManager {
                     if (filenameFilter == null ||
                             filenameFilter.accept(file.toFile().getParentFile(),
                             file.toFile().getName())) {
-                        String checksum = checksum(file.toFile(), md);
+                        String checksum = computeHash(file.toFile(), md);
                         pathMd5SumLinkedHashMap.put(path.toPath().relativize(file).toString(),
                                 checksum);
                     }
@@ -223,7 +225,7 @@ public class FilesManager {
         return fileMd5SumLinkedHashMap;
     }
 
-    private String checksum(File file, MessageDigest md) throws IOException {
+    private String computeHash(File file, MessageDigest md) throws IOException {
         // DigestInputStream is better, but you also can hash file like this.
         try (InputStream fis = new FileInputStream(file)) {
             byte[] buffer = new byte[1024];
@@ -239,5 +241,19 @@ public class FilesManager {
             result.append(String.format("%02x", b));
         }
         return result.toString();
+    }
+
+    public long computeCRC(File file) throws IOException {
+        CRC32 crc = new CRC32();
+        try (FileInputStream fis = new FileInputStream(file)) {
+            try (BufferedInputStream bis = new BufferedInputStream(fis)) {
+                byte[] bytes = new byte[1024];
+                int i;
+                while ((i = bis.read(bytes)) != -1) {
+                    crc.update(bytes, 0, i);
+                }
+            }
+        }
+        return crc.getValue();
     }
 }

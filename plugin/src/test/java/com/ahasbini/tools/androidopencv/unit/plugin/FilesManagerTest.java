@@ -1,6 +1,7 @@
 package com.ahasbini.tools.androidopencv.unit.plugin;
 
 import com.ahasbini.tools.androidopencv.internal.service.FilesManager;
+import com.ahasbini.tools.androidopencv.internal.service.Injector;
 import com.ahasbini.tools.androidopencv.unit.BaseUnitTest;
 
 import org.gradle.api.Project;
@@ -47,7 +48,7 @@ public class FilesManagerTest extends BaseUnitTest {
 
         File md5SumFile = temporaryFolder.newFile("test.md5");
 
-        FilesManager filesManager = new FilesManager(Mockito.mock(Project.class));
+        FilesManager filesManager = Injector.getFilesManager(Mockito.mock(Project.class));
         Map<String, String> outputMap = filesManager.writeAndGetMd5Sums(md5SumFile, folder,
                 false, null);
 
@@ -82,7 +83,7 @@ public class FilesManagerTest extends BaseUnitTest {
 
         File md5SumFile = temporaryFolder.newFile("test.md5");
 
-        FilesManager filesManager = new FilesManager(Mockito.mock(Project.class));
+        FilesManager filesManager = Injector.getFilesManager(Mockito.mock(Project.class));
         Map<String, String> outputMap = filesManager.writeAndGetMd5Sums(md5SumFile, folder,
                 false, null);
 

@@ -5,6 +5,7 @@ import com.ahasbini.tools.androidopencv.Constants;
 import com.ahasbini.tools.androidopencv.PluginException;
 import com.ahasbini.tools.androidopencv.internal.service.DownloadManager;
 import com.ahasbini.tools.androidopencv.internal.service.FilesManager;
+import com.ahasbini.tools.androidopencv.internal.service.Injector;
 import com.ahasbini.tools.androidopencv.internal.util.ExceptionUtils;
 import com.ahasbini.tools.androidopencv.internal.util.Logger;
 
@@ -25,7 +26,7 @@ import java.util.ResourceBundle;
 public class DownloadAndroidOpenCVTask extends DefaultTask {
 
     private final Logger logger = Logger.getLogger(DownloadAndroidOpenCVTask.class);
-    private final ResourceBundle messages = ResourceBundle.getBundle("messages");
+    private final ResourceBundle messages = Injector.getMessages();
 
     @Input
     public String getVersion() {
@@ -52,16 +53,26 @@ public class DownloadAndroidOpenCVTask extends DefaultTask {
 
         File versionCacheDir = new File(androidOpenCVCacheDir, requestedVersion);
 
-        return new File(versionCacheDir, String.format(
-                Constants.OPENCV_VERSION_ANDROID_SDK_ZIP_FILE_NAME, requestedVersion));
+        //noinspection UnnecessaryLocalVariable
+        File androidOpenCVRequestedZipFile = new File(versionCacheDir,
+                String.format(Constants.OPENCV_VERSION_ANDROID_SDK_ZIP_FILE_NAME,
+                        requestedVersion));
+
+        return androidOpenCVRequestedZipFile;
     }
 
     @TaskAction
     public void downloadAndroidOpenCV() {
         logger.debug("downloadAndroidOpenCV called");
 
-        FilesManager filesManager = new FilesManager(getProject());
-        DownloadManager downloadManager = new DownloadManager(getProject());
+        performDownloadAndroidOpenCV();
+    }
+
+    private void performDownloadAndroidOpenCV() {
+        logger.debug("performDownloadAndroidOpenCV called");
+
+        FilesManager filesManager = Injector.getFilesManager(getProject());
+        DownloadManager downloadManager = Injector.getDownloadManager(getProject());
         AndroidOpenCVExtension androidOpenCVExtension = getProject().getExtensions()
                 .getByType(AndroidOpenCVExtension.class);
         String requestedVersion = androidOpenCVExtension.getVersion();
@@ -93,6 +104,7 @@ public class DownloadAndroidOpenCVTask extends DefaultTask {
                 url = androidOpenCVExtension.getUrl();
             }
 
+            // TODO: 12-Dec-19 ahasbini: prevent downloading if in offline mode
             downloadManager.download(url, new File(versionCacheDir,
                     String.format(Constants.OPENCV_VERSION_ANDROID_SDK_ZIP_FILE_NAME,
                             requestedVersion)));

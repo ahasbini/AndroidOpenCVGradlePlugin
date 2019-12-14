@@ -16,11 +16,11 @@ public class DownloadManager {
     // TODO: 12-Oct-19 ahasbini: implement testing for this
 
     private final Logger logger = Logger.getLogger(DownloadManager.class);
-    private final ResourceBundle messages = ResourceBundle.getBundle("messages");
+    private final ResourceBundle messages = Injector.getMessages();
 
     private Project project;
 
-    public DownloadManager(Project project) {
+    DownloadManager(Project project) {
         this.project = project;
     }
 

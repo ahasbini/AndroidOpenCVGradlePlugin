@@ -1,6 +1,7 @@
 package com.ahasbini.tools.androidopencv;
 
 import com.ahasbini.tools.androidopencv.internal.service.AndroidBuildScriptModifier;
+import com.ahasbini.tools.androidopencv.internal.service.Injector;
 import com.ahasbini.tools.androidopencv.internal.util.ExceptionUtils;
 import com.ahasbini.tools.androidopencv.internal.util.Logger;
 import com.ahasbini.tools.androidopencv.task.BuildAndroidOpenCVAarsTask;
@@ -29,7 +30,7 @@ import java.util.ResourceBundle;
 public class AndroidOpenCVGradlePlugin implements Plugin<Project> {
 
     private final Logger logger = Logger.getLogger(AndroidOpenCVGradlePlugin.class);
-    private final ResourceBundle messages = ResourceBundle.getBundle("messages");
+    private final ResourceBundle messages = Injector.getMessages();
 
     @Override
     public void apply(Project project) {
@@ -40,6 +41,10 @@ public class AndroidOpenCVGradlePlugin implements Plugin<Project> {
             logger.quiet("AndroidOpenCVGradlePlugin logs enabled");
             Logger.setUseQuietLogs(true);
         }
+
+        // Calling init to reset/refresh beans since the plugin code is always loaded or not
+        // destroyed between builds when using Gradle daemons
+        Injector.init();
 
         // Check if project has Android Gradle Plugin
         PluginManager plugins = project.getPluginManager();
@@ -105,7 +110,7 @@ public class AndroidOpenCVGradlePlugin implements Plugin<Project> {
 
         // Modify the android configs for them to be picked up before being evaluated by the plugin
         AndroidBuildScriptModifier androidBuildScriptModifier =
-                new AndroidBuildScriptModifier(project);
+                Injector.getAndroidBuildScriptModifier(project);
         try {
             androidBuildScriptModifier.modifyAndroidBuildScript();
         } catch (Exception e) {
@@ -136,7 +141,7 @@ public class AndroidOpenCVGradlePlugin implements Plugin<Project> {
             /*FilesManager filesManager = new FilesManager(project);
             DownloadManager downloadManager = new DownloadManager(project);*/
             AndroidBuildScriptModifier androidBuildScriptModifier =
-                    new AndroidBuildScriptModifier(project);
+                    Injector.getAndroidBuildScriptModifier(project);
 
             File androidOpenCVCacheDir = new File(System.getProperty("user.home"),
                     ".androidopencv");

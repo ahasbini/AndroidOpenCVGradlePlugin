@@ -2,6 +2,7 @@ package com.ahasbini.tools.androidopencv.task;
 
 import com.ahasbini.tools.androidopencv.PluginException;
 import com.ahasbini.tools.androidopencv.internal.service.FilesManager;
+import com.ahasbini.tools.androidopencv.internal.service.Injector;
 import com.ahasbini.tools.androidopencv.internal.util.ExceptionUtils;
 import com.ahasbini.tools.androidopencv.internal.util.Logger;
 
@@ -21,14 +22,14 @@ import java.util.ResourceBundle;
 public class CleanAndroidOpenCVBuildFolderTask extends DefaultTask {
 
     private final Logger logger = Logger.getLogger(CleanAndroidOpenCVBuildFolderTask.class);
-    private final ResourceBundle messages = ResourceBundle.getBundle("messages");
+    private final ResourceBundle messages = Injector.getMessages();
 
     @TaskAction
     public void cleanAndroidOpenCVBuildFolder() {
         logger.debug("cleanAndroidOpenCVBuildFolder called");
 
         Project project = getProject();
-        FilesManager filesManager = new FilesManager(project);
+        FilesManager filesManager = Injector.getFilesManager(project);
 
         logger.info("cleaning project Android OpenCV build directory");
 

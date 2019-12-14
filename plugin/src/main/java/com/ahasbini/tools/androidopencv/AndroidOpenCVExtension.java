@@ -5,8 +5,10 @@ package com.ahasbini.tools.androidopencv;
  */
 public class AndroidOpenCVExtension {
 
+    // TODO: 11-Dec-19 ahasbini: remove url to prevent conflict with cache and make plugin prone to serious issues
 
     private String version = "";
+    @Deprecated
     private String url = "";
 
     public String getVersion() {
@@ -21,14 +23,17 @@ public class AndroidOpenCVExtension {
         this.version = version;
     }
 
+    @Deprecated
     public String getUrl() {
         return url;
     }
 
+    @Deprecated
     public void setUrl(String url) {
         this.url = url;
     }
 
+    @Deprecated
     public void url(String url) {
         this.url = url;
     }
