@@ -14,6 +14,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.JarURLConnection;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.FileVisitResult;
@@ -24,8 +26,12 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 import java.util.zip.CRC32;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -138,13 +144,67 @@ public class FilesManager {
 
     public void writeFolderContentsFromClasspath(String classpath, File directory)
             throws URISyntaxException, IOException {
-        URL resource = getClass().getResource(classpath);
-        File classpathDir = new File(resource.toURI());
-        File[] files = classpathDir.listFiles();
-        if (files != null) {
-            for (File file : files) {
-                recursiveCopy(file, new File(directory, file.getName()), null);
+        URL url = getClass().getResource(classpath);
+        if (url.getProtocol().equals("file")) {
+            URI resource = url.toURI();
+            File classpathDir = new File(resource);
+            File[] files = classpathDir.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    recursiveCopy(file, new File(directory, file.getName()), null);
+                }
             }
+        } else if (url.getProtocol().equals("jar")) {
+            URI uri = ((JarURLConnection) url.openConnection()).getJarFileURL().toURI();
+            JarFile jarFile = new JarFile(new File(uri));
+            logger.debug("jarFile: " + jarFile);
+
+            if (classpath.startsWith("/")) {
+                classpath = classpath.substring(1);
+            }
+            if (classpath.endsWith("/")) {
+                classpath = classpath.substring(0 , classpath.length() - 1);
+            }
+
+            Enumeration<JarEntry> entries = jarFile.entries();
+            ArrayList<String> filteredNames = new ArrayList<>();
+            while (entries.hasMoreElements()) {
+                JarEntry jarEntry = entries.nextElement();
+                if (jarEntry.getName().startsWith(classpath)) {
+                    filteredNames.add(jarEntry.getName());
+                }
+            }
+
+            JarEntry jarEntry = jarFile.getJarEntry(classpath + "/");
+            if (jarEntry != null && jarEntry.isDirectory()) {
+                filteredNames.remove(jarEntry.getName());
+            }
+
+            for (String filteredName : filteredNames) {
+                JarEntry filteredJarEntry = jarFile.getJarEntry(filteredName);
+                String path = filteredJarEntry.getName().substring(classpath.length() + 1);
+                File dst = new File(directory, path);
+                if (filteredJarEntry.isDirectory()) {
+
+                    if (dst.exists()) {
+                        recursiveDelete(dst);
+                    }
+
+                    //noinspection ResultOfMethodCallIgnored
+                    dst.mkdir();
+                    //noinspection ResultOfMethodCallIgnored
+                    dst.setLastModified(filteredJarEntry.getTime());
+                } else {
+                    InputStream inputStream = jarFile.getInputStream(filteredJarEntry);
+                    Files.copy(inputStream, dst.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                    //noinspection ResultOfMethodCallIgnored
+                    dst.setLastModified(filteredJarEntry.getTime());
+                    inputStream.close();
+                }
+            }
+        } else {
+            throw new UnsupportedProtocolException("protocol '" + url.getProtocol() +
+                    "' is not supported");
         }
     }
 
