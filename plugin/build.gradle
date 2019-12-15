@@ -3,6 +3,7 @@ plugins {
     id 'java'
     id 'maven-publish'
     id "com.github.gmazzo.buildconfig" version "1.6.1"
+    id 'com.gradle.plugin-publish' version '0.10.1'
 }
 
 group 'com.ahasbini.tools'
@@ -95,6 +96,21 @@ task sourceSets {
             println("java: " + s.java.sourceDirectories.files)
             println("groovy: " + s.groovy.sourceDirectories.files)
             println ""
+        }
+    }
+}
+
+pluginBundle {
+    description = 'Gradle Plugin that will automate retrieving the Android OpenCV SDK and linking ' +
+            'it to the project, making it easy to include OpenCV into Android applications.'
+    website = 'https://github.com/ahasbini/AndroidOpenCVGradlePlugin'
+    vcsUrl = 'https://github.com/ahasbini/AndroidOpenCVGradlePlugin'
+    tags = ['android-opencv', 'gradle-plugin', 'cmake', 'native-libraries', 'opencv',
+            'android-application', 'ndk', 'android-ndk', 'opencv-sdk']
+    plugins {
+        androidOpenCVGradlePlugin {
+            displayName = "AndroidOpenCVGradlePlugin"
+            id = 'com.ahasbini.android-opencv-gradle-plugin'
         }
     }
 }
