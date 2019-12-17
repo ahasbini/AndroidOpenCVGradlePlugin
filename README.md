@@ -15,8 +15,10 @@ For usage in an Android Project, the below changes are needed:
     ```gradle
     buildscript {
         repositories {
-            mavenLocal() // At the beginning of the block
-            // ... google() or jcenter() others
+            maven {  // At the beginning of the block
+              url "https://plugins.gradle.org/m2/"
+            }
+            // ... google() or jcenter() or others
             maven { // At the end of the block and after google()
                url 'https://repo.gradle.org/gradle/libs-releases'
             }
