@@ -96,9 +96,9 @@ command could be leveraged for getting more info.
  
     ```shell
     # On Windows:
-    gradlew.bat --debug task
+    gradlew.bat --debug <task>
     # or on *nix:
-    ./gradlew --debug task
+    ./gradlew --debug <task>
     ```
  
  - `-PENABLE_ANDROID_OPENCV_LOGS` project parameter flag, this is 
@@ -107,9 +107,18 @@ command could be leveraged for getting more info.
     
     ```shell
     # On Windows:
-    gradlew.bat -PENABLE_ANDROID_OPENCV_LOGS task
+    gradlew.bat -PENABLE_ANDROID_OPENCV_LOGS <task>
     # or on *nix:
-    ./gradlew -PENABLE_ANDROID_OPENCV_LOGS task
+    ./gradlew -PENABLE_ANDROID_OPENCV_LOGS <task>
+    ```
+ 
+ - Perform a ```clean```. Example:
+    
+    ```shell
+    # On Windows:
+    gradlew.bat clean
+    # or on *nix:
+    ./gradlew clean
     ```
 
 ## Underlying Logic & Implementation
@@ -132,20 +141,20 @@ In detail, below are the steps it carries out (primarily in this order):
    and add dependencies ```debugImplementation``` and
    ```releaseImplementation``` with the names of the AARs to project
    ```dependencies```.
- - **[DownloadAndroidOpenCVTask.java](plugin/src/main/java/com/ahasbini/tools/androidopencv/tasks/DownloadAndroidOpenCVTask.java)
+ - **[DownloadAndroidOpenCVTask.java](plugin/src/main/java/com/ahasbini/tools/androidopencv/task/DownloadAndroidOpenCVTask.java)
    (Execution Phase)**
    - Download the ```opencv-xxx-android-sdk.zip``` into the directory 
    ```{user_home}/.androidopencv/{version}``` using the url template
    ```"https://sourceforge.net/projects/opencvlibrary/files/" + version + "/opencv-" + version + "-android-sdk.zip"```.
- - **[UnZipAndroidOpenCVTask.java](plugin/src/main/java/com/ahasbini/tools/androidopencv/tasks/UnZipAndroidOpenCVTask.java)
+ - **[UnZipAndroidOpenCVTask.java](plugin/src/main/java/com/ahasbini/tools/androidopencv/task/UnZipAndroidOpenCVTask.java)
    (Execution Phase)**
    - Extract the downloaded zip file within the 
    ```{user_home}/.androidopencv/{version}``` folder.
- - **[CopyAndroidOpenCVJniLibsTask.java](plugin/src/main/java/com/ahasbini/tools/androidopencv/tasks/CopyAndroidOpenCVJniLibsTask.java)
+ - **[CopyAndroidOpenCVJniLibsTask.java](plugin/src/main/java/com/ahasbini/tools/androidopencv/task/CopyAndroidOpenCVJniLibsTask.java)
    (Execution Phase)**
    - Copy the JNI libs/directories from the extracted zip folder into 
    ```{project_module_directory}/build/androidopencv```.
- - **[BuildAndroidOpenCVAarsTask.java](plugin/src/main/java/com/ahasbini/tools/androidopencv/tasks/BuildAndroidOpenCVAarsTask.java)
+ - **[BuildAndroidOpenCVAarsTask.java](plugin/src/main/java/com/ahasbini/tools/androidopencv/task/BuildAndroidOpenCVAarsTask.java)
    (Execution Phase)**
    - Compile AAR binaries from Java source and place outputs (debug and
    release builds) in
