@@ -6,24 +6,6 @@ Android applications.
 
 ## Usage
 
-Currently the plugin is not yet published on public repositories. To
-use the plugin, it requires to be compiled and published locally on the
-machine for projects to be able to resolve and use it:
-
-```shell
-git clone https://github.com/ahasbini/AndroidOpenCVGradlePlugin.git
-cd AndroidOpenCVGradlePlugin
-
-# Either (on Windows):
-gradlew.bat :plugin:publishToMavenLocal
-# or (on *nix):
-./gradlew :plugin:publishToMavenLocal
-```
-
-Once commands above complete to succession, the plugin is now located
-in the local Maven repository of the machine (```.m2```) under
-```com\ahasbini\tools\android-opencv-gradle-plugin```.
-
 For usage in an Android Project, the below changes are needed:
 
 1. In the project ```build.gradle``` (at the root directory of the
@@ -41,7 +23,7 @@ For usage in an Android Project, the below changes are needed:
         }
         dependencies {
             // ... the Android plugin and other classpath definitions
-            classpath 'com.ahasbini.tools:android-opencv-gradle-plugin:0.0.+'
+            classpath 'com.ahasbini.tools:android-opencv-gradle-plugin:0.1.+'
         }
     }
     ```
@@ -65,11 +47,6 @@ For usage in an Android Project, the below changes are needed:
     
         // Required: Version of OpenCV to be used in the project
         version '3.3.0'
-    
-        // Optional: Custom url for downloading the
-        // opencv-xxx-android-sdk.zip file located at
-        // https://sourceforge.net/projects/opencvlibrary/files/opencv-android
-        url 'https://sourceforge.net/projects/opencvlibrary/files/opencv-android/3.3.0/opencv-3.3.0-android-sdk.zip/download'
     }
     
     // ...
@@ -116,9 +93,9 @@ command could be leveraged for getting more info.
  AndroidOpenCVGradlePlugin. Example:
  
     ```shell
-    # Either (on Windows):
+    # On Windows:
     gradlew.bat --debug task
-    # or (on *nix):
+    # or on *nix:
     ./gradlew --debug task
     ```
  
@@ -127,9 +104,9 @@ command could be leveraged for getting more info.
  logs without enabling the logs for everything else in the build. Example:
     
     ```shell
-    # Either (on Windows):
+    # On Windows:
     gradlew.bat -PENABLE_ANDROID_OPENCV_LOGS task
-    # or (on *nix):
+    # or on *nix:
     ./gradlew -PENABLE_ANDROID_OPENCV_LOGS task
     ```
 
@@ -140,42 +117,78 @@ extracts the files, compiles the Java sources into AARs, and links them
 along with JNI binaries into the project using ```dependencies``` and
 ```externalNativeBuild``` configurations.
 
-In detail, below are the steps it carries our (primarily in this order)
-which can be found mostly in
-[AndroidOpenCVGradlePlugin.java](plugin/src/main/java/com/ahasbini/tools/androidopencv/AndroidOpenCVGradlePlugin.java):
+In detail, below are the steps it carries out (primarily in this order):
 
- - Set the OpenCV JNI directory and arguments of the
- ```externalNativeBuild``` in the ```android``` block.
- - Extract the requested version of OpenCV from the ```androidOpenCV```
- block.
- - Check if existing or download the ```opencv-xxx-android-sdk.zip```
- into the directory ```{user_home}/.androidopencv/{version}``` using
- the url template
- ```"https://sourceforge.net/projects/opencvlibrary/files/" + version + "/opencv-" + version + "-android-sdk.zip"```
- or the value of ```url``` in ```androidOpenCV``` block.
- - Check if existing or extract the downloaded zip file.
- - Check if existing and verified (using md5 sums), or copy the JNI 
- directories (path used in the first step) into 
- ```{project_module_directory}/build/androidopencv```.
- - Compile AAR binaries from Java source and place outputs (debug and
- release builds) in
- ```{user_home}/.androidopencv/{version}/build-cache``` using the
- [Gradle Tooling API](https://docs.gradle.org/current/userguide/embedding.html).
- - Add ```flatDir``` repository with
- ```{user_home}/.androidopencv/{version}/build-cache/outputs``` path
- and add dependencies ```debugImplementation``` and
- ```releaseImplementation``` with the AARs to project
- ```dependencies```.
+ - **[AndroidOpenCVGradlePlugin.java](plugin/src/main/java/com/ahasbini/tools/androidopencv/AndroidOpenCVGradlePlugin.java)
+   (Configuration Phase)**
+   - Extract the requested version of OpenCV from the ```androidOpenCV```
+   block.
+   - Set the OpenCV JNI directory and arguments of the
+   ```externalNativeBuild``` in the ```android``` block.
+   - Add ```flatDir``` repository with
+   ```{user_home}/.androidopencv/{version}/build-cache/outputs``` path
+   and add dependencies ```debugImplementation``` and
+   ```releaseImplementation``` with the names of the AARs to project
+   ```dependencies```.
+ - **[DownloadAndroidOpenCVTask.java](plugin/src/main/java/com/ahasbini/tools/androidopencv/tasks/DownloadAndroidOpenCVTask.java)
+   (Execution Phase)**
+   - Download the ```opencv-xxx-android-sdk.zip``` into the directory 
+   ```{user_home}/.androidopencv/{version}``` using the url template
+   ```"https://sourceforge.net/projects/opencvlibrary/files/" + version + "/opencv-" + version + "-android-sdk.zip"```.
+ - **[UnZipAndroidOpenCVTask.java](plugin/src/main/java/com/ahasbini/tools/androidopencv/tasks/UnZipAndroidOpenCVTask.java)
+   (Execution Phase)**
+   - Extract the downloaded zip file within the 
+   ```{user_home}/.androidopencv/{version}``` folder.
+ - **[CopyAndroidOpenCVJniLibsTask.java](plugin/src/main/java/com/ahasbini/tools/androidopencv/tasks/CopyAndroidOpenCVJniLibsTask.java)
+   (Execution Phase)**
+   - Copy the JNI libs/directories from the extracted zip folder into 
+   ```{project_module_directory}/build/androidopencv```.
+ - **[BuildAndroidOpenCVAarsTask.java](plugin/src/main/java/com/ahasbini/tools/androidopencv/tasks/BuildAndroidOpenCVAarsTask.java)
+   (Execution Phase)**
+   - Compile AAR binaries from Java source and place outputs (debug and
+   release builds) in
+   ```{user_home}/.androidopencv/{version}/build-cache``` using the
+   [Gradle Tooling API](https://docs.gradle.org/current/userguide/embedding.html).
 
 ## Contributing & Future Plans
 
-As this is still under development, testing and not yet published, feel
+As this is still under development and testing, feel
 free to share your contributions to the project with finding issues,
-code improvements and/or feature additions and requests. Below is a
-brief list of things (TODOs) that are in plan for the project:
+code improvements and/or feature additions and requests. The build 
+scripts are configured and made ready for testing and publishing custom 
+builds to the local machine for use in other projects. This can be done 
+similar to to the below steps:
+
+```shell
+git clone https://github.com/ahasbini/AndroidOpenCVGradlePlugin.git
+cd AndroidOpenCVGradlePlugin
+
+# Perform some code changes and run some tests in your favorite IDE/Editor
+
+# Publish custom builds on Windows:
+gradlew.bat :plugin:publishToMavenLocal
+# or on *nix:
+./gradlew :plugin:publishToMavenLocal
+```
+
+Once commands above complete to succession, the plugin is now located
+in the local Maven repository of the machine (```.m2```) under
+```com\ahasbini\tools\android-opencv-gradle-plugin```.
+
+With regards to the test cases, the current tests executed for the 
+plugin can be found in the [test](plugin/src/test/java) folder which 
+include various [unit, integration and functional](https://guides.gradle.org/testing-gradle-plugins/) 
+test cases. The tests also make use of the [Gradle TestKit](https://docs.gradle.org/current/userguide/test_kit.html)
+along with pre-defined build scripts or project setups found in the 
+test [resources](plugin/src/test/resources) folder to best simulate the 
+use cases of the plugin from within the project itself.
+
+As part of the ongoing development, below is a brief list of things 
+(TODOs) that are in plan for the project:
 
  - [ ] Add Android NDK version checking and configuration for proper
  linking with compiled binaries of OpenCV
  - [x] Add plugin ```clean``` tasks
+ - [ ] Add plugin install of custom built Android OpenCV task
  - [ ] Add more tests and assertions in test cases
  - [ ] CI/CD integration
