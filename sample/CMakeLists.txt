@@ -1,5 +1,6 @@
 
-cmake_minimum_required(VERSION 3.4.1)
+cmake_minimum_required(VERSION 3.4.1 FATAL_ERROR)
+include(ndk-stl-config.cmake)
 
 find_package(OpenCV REQUIRED)
 message(STATUS "OpenCV libraries: ${OpenCV_LIBS}")
