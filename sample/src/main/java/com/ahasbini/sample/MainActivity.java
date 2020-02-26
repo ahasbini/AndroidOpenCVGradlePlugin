@@ -1,8 +1,12 @@
 package com.ahasbini.sample;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.widget.Toast;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
@@ -34,7 +38,14 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
             switch (status) {
                 case SUCCESS:
                     Log.i(TAG, "OpenCV loaded successfully");
-                    mCameraView.enableView();
+
+                    if (ActivityCompat.checkSelfPermission(MainActivity.this,
+                            Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                        mCameraView.enableView();
+                    } else {
+                        Toast.makeText(MainActivity.this, "Camera Permission not granted",
+                                Toast.LENGTH_LONG).show();
+                    }
                     break;
                 default:
                     super.onManagerConnected(status);
@@ -51,6 +62,7 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
         mCameraView.setCameraIndex(CameraBridgeViewBase.CAMERA_ID_BACK);
         mCameraView.setVisibility(CameraBridgeViewBase.VISIBLE);
         mCameraView.setCvCameraViewListener(this);
+        mCameraView.setCameraPermissionGranted();
     }
 
     @Override

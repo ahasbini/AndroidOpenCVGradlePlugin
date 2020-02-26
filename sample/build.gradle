@@ -63,7 +63,7 @@ android {
 }
 
 androidOpenCV {
-    version '3.4.9'
+    version '4.1.1'
 }
 
 dependencies {

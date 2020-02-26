@@ -27,6 +27,7 @@ endfunction()
 
 if("${ANDROID_STL}" STREQUAL "libstdc++")
     # The default minimal system C++ runtime library.
+    configure_shared_stl("llvm-libc++" "c++_shared")
 elseif("${ANDROID_STL}" STREQUAL "gabi++_shared")
     # The GAbi++ runtime (shared).
     message(FATAL_ERROR "gabi++_shared was not configured by ndk-stl package")
