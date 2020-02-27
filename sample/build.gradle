@@ -5,6 +5,7 @@ buildscript {
         google()
         maven { url "https://plugins.gradle.org/m2/" }
         maven { url 'https://repo.gradle.org/gradle/libs-releases' }
+        mavenLocal()
     }
     dependencies {
         //noinspection GradleDependency
@@ -18,6 +19,7 @@ repositories {
     jcenter()
     google()
     mavenCentral()
+    mavenLocal()
 }
 
 apply plugin: 'com.android.application'
