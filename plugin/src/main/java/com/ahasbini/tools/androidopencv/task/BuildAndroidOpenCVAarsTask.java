@@ -17,12 +17,14 @@ import org.gradle.api.tasks.TaskAction;
 import org.gradle.tooling.BuildLauncher;
 import org.gradle.tooling.GradleConnector;
 import org.gradle.tooling.ProjectConnection;
+import org.gradle.util.GradleVersion;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.Optional;
 import java.util.ResourceBundle;
 
 /**
@@ -182,10 +184,14 @@ public class BuildAndroidOpenCVAarsTask extends DefaultTask {
                     ExceptionUtils.getCauses(e, messages.getString("caused_by")), e);
         }
 
+        String gradleVersion = Optional.ofNullable(Constants.GRADLE_VERSION)
+                .orElse(GradleVersion.current().getVersion());
+        logger.info("Use GradleVersion: " + gradleVersion);
+
         // Build AAR binaries
         try (ProjectConnection buildCacheProjectConnection = GradleConnector.newConnector()
                 .forProjectDirectory(androidOpenCVBuildCacheDir)
-                .useGradleVersion("4.1")
+                .useGradleVersion(gradleVersion)
                 .connect()) {
 
             BuildLauncher launcher = buildCacheProjectConnection.newBuild()
